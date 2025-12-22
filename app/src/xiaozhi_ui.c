@@ -107,8 +107,8 @@ rt_mailbox_t g_ui_task_mb = RT_NULL;
 rt_timer_t update_time_ui_timer = RT_NULL;
 rt_timer_t update_weather_ui_timer = RT_NULL;
 rt_tick_t last_listen_tick = 0;
-uint8_t vad_enable = 1;         // 0是支持打断，1是不支持打断
-uint8_t last_charge_status = 0; // 上次充电状态
+uint8_t vad_enable = 1;                       // 0是支持打断，1是不支持打断
+uint8_t last_charge_status = 0;               // 上次充电状态
 lv_obj_t *g_screen_before_low_battery = NULL; // 记录低电量关机前的页面
 
 #if defined(KWS_ENABLE_DEFAULT) && KWS_ENABLE_DEFAULT
@@ -849,13 +849,7 @@ rt_err_t xiaozhi_ui_obj_init()
 
     standby_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(standby_screen, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    // 设置彩虹渐变背景
-    lv_obj_set_style_bg_color(standby_screen, lv_color_hex(0xFF0000),
-                              0); // 起始颜色:红色
-    lv_obj_set_style_bg_grad_color(standby_screen, lv_color_hex(0x9400D3),
-                                   0); // 结束颜色:紫色
-    lv_obj_set_style_bg_grad_dir(standby_screen, LV_GRAD_DIR_VER,
-                                 0); // 垂直渐变
+    lv_obj_set_style_bg_color(standby_screen, lv_color_hex(0x000000), 0); // 黑色
 
     lv_obj_t *standby_header_row = lv_obj_create(standby_screen);
     lv_obj_remove_flag(standby_header_row, LV_OBJ_FLAG_SCROLLABLE);
@@ -876,7 +870,7 @@ rt_err_t xiaozhi_ui_obj_init()
     img_emoji = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(sleepy2);
     LV_IMAGE_DECLARE(funny2);
-    lv_img_set_src(img_emoji, &sleepy2); // 初始化提示小智还未连接
+    lv_img_set_src(img_emoji, &sleepy2);           // 初始化提示小智还未连接
     lv_obj_set_width(img_emoji, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(img_emoji, LV_SIZE_CONTENT); /// 1
     lv_obj_set_x(img_emoji, (int)(104 * g_scale));
