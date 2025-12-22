@@ -72,7 +72,14 @@
         "regions": [
             {
                 "offset": "0x00000000", 
-                "max_size": "0x00800000", 
+                "max_size": "0x00200000", 
+                "tags": [
+                    "PSRAM_CODE"
+                ]
+            },
+            {
+                "offset": "0x00200000", 
+                "max_size": "0x00600000", 
                 "tags": [
                     "PSRAM_DATA"
                 ]
