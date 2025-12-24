@@ -214,9 +214,9 @@ lv_obj_t *bluetooth_icon = NULL;        // 蓝牙图标
 lv_obj_t *img_emoji = NULL;             // 表情图标
 lv_obj_t *network_icon = NULL;          // 网络图标
 
-lv_obj_t *weather_bgimg;         // 天气背景图片
-lv_obj_t *weather_icon;          // 天气图标
-lv_obj_t *ui_Image_calendar;     // 日历图标
+lv_obj_t *weather_bgimg; // 天气背景图片
+lv_obj_t *weather_icon;  // 天气图标
+// ui_Image_calendar 已删除
 lv_obj_t *standby_screen = NULL; // 待机界面
 lv_obj_t *ui_Label_ip = NULL;    // 地址和温度标签
 lv_obj_t *last_time = NULL;      // 上次更新天气图标
@@ -886,8 +886,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(hour_tens_img, &img_1);
     lv_obj_set_width(hour_tens_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(hour_tens_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(hour_tens_img, (int)(0 * g_scale));
-    lv_obj_set_y(hour_tens_img, (int)(-120 * g_scale));
+    lv_obj_set_x(hour_tens_img, (int)(-120 * g_scale));
+    lv_obj_set_y(hour_tens_img, (int)(0 * g_scale));
     lv_obj_set_align(hour_tens_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(hour_tens_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(hour_tens_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -898,8 +898,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(hour_units_img, &img_2);
     lv_obj_set_width(hour_units_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(hour_units_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(hour_units_img, (int)(0 * g_scale));
-    lv_obj_set_y(hour_units_img, (int)(-40 * g_scale));
+    lv_obj_set_x(hour_units_img, (int)(-120 * g_scale));
+    lv_obj_set_y(hour_units_img, (int)(0 * g_scale));
     lv_obj_set_align(hour_units_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(hour_units_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(hour_units_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -911,8 +911,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(minute_tens_img, &img_3);
     lv_obj_set_width(minute_tens_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(minute_tens_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(minute_tens_img, (int)(0 * g_scale));
-    lv_obj_set_y(minute_tens_img, (int)(40 * g_scale));
+    lv_obj_set_x(minute_tens_img, (int)(40 * g_scale));
+    lv_obj_set_y(minute_tens_img, (int)(0 * g_scale));
     lv_obj_set_align(minute_tens_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(minute_tens_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(minute_tens_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -924,8 +924,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(minute_units_img, &img_4);
     lv_obj_set_width(minute_units_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(minute_units_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(minute_units_img, (int)(0 * g_scale));
-    lv_obj_set_y(minute_units_img, (int)(120 * g_scale));
+    lv_obj_set_x(minute_units_img, (int)(120 * g_scale));
+    lv_obj_set_y(minute_units_img, (int)(0 * g_scale));
     lv_obj_set_align(minute_units_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(minute_units_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(minute_units_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -937,7 +937,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(bluetooth_icon, &ble_icon_img);
     lv_obj_set_width(bluetooth_icon, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(bluetooth_icon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(bluetooth_icon, (int)(180 * g_scale));
+    lv_obj_set_x(bluetooth_icon, (int)(200 * g_scale));
     lv_obj_set_y(bluetooth_icon, (int)(-185 * g_scale));
     lv_obj_set_align(bluetooth_icon, LV_ALIGN_CENTER);
     lv_obj_add_flag(bluetooth_icon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -961,7 +961,7 @@ rt_err_t xiaozhi_ui_obj_init()
     battery_arc = lv_arc_create(standby_screen);
     lv_obj_set_size(battery_arc, (int)(60 * g_scale),
                     (int)(60 * g_scale)); // 设置圆弧大小
-    lv_obj_set_x(battery_arc, (int)(100 * g_scale));
+    lv_obj_set_x(battery_arc, (int)(80 * g_scale));
     lv_obj_set_y(battery_arc, (int)(-185 * g_scale));
     lv_obj_set_align(battery_arc, LV_ALIGN_CENTER);
     lv_arc_set_rotation(battery_arc, 270);                // 从顶部开始
@@ -1038,18 +1038,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_style(last_time, &style2, 0);
     lv_obj_set_style_text_color(last_time, lv_color_hex(0x000000), 0); // 黑色
 
-    // 日历
-    ui_Image_calendar = lv_img_create(standby_screen);
-    LV_IMAGE_DECLARE(calendar);
-    lv_img_set_src(ui_Image_calendar, &calendar);
-    lv_obj_set_width(ui_Image_calendar, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_Image_calendar, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Image_calendar, (int)(-107 * g_scale));
-    lv_obj_set_y(ui_Image_calendar, (int)(39 * g_scale));
-    lv_obj_set_align(ui_Image_calendar, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Image_calendar, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
-    lv_obj_clear_flag(ui_Image_calendar, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_img_set_zoom(ui_Image_calendar, (int)(320 * g_scale));
+    // 日历图标已删除
 
     ui_Label_year = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_year, LV_SIZE_CONTENT);  /// 1
