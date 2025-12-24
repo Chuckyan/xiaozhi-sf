@@ -1088,7 +1088,11 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_pad_all(main_container, 0, 0);
     lv_obj_set_style_margin_all(main_container, 0, 0);
 
-    lv_obj_set_style_bg_opa(main_container, LV_OPA_0, 0);
+    // 使用背景图片（与待机界面相同）
+    LV_IMAGE_DECLARE(background);
+    lv_obj_set_style_bg_img_src(main_container, &background, 0);
+    lv_obj_set_style_bg_opa(main_container, LV_OPA_COVER, 0);
+    // lv_obj_set_style_bg_opa(main_container, LV_OPA_0, 0);  // 备用：透明背景
     lv_obj_set_style_border_width(main_container, 0, 0);
 
     lv_obj_set_flex_flow(main_container, LV_FLEX_FLOW_COLUMN);
@@ -1118,7 +1122,7 @@ rt_err_t xiaozhi_ui_obj_init()
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_bg_color(header_row, lv_color_hex(0x000000),
                               LV_STATE_DEFAULT); // 调试背景色
-    lv_obj_set_style_bg_opa(header_row, LV_OPA_30, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(header_row, LV_OPA_0, LV_STATE_DEFAULT); // 完全透明
     // 插入一个空白对象作为左边距
     lv_obj_t *spacer = lv_obj_create(header_row);
     lv_obj_remove_flag(spacer, LV_OBJ_FLAG_SCROLLABLE); // 关闭滚动条
