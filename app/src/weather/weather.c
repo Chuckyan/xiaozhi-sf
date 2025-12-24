@@ -536,6 +536,8 @@ void time_ui_update_callback(void)
     }
 
     // 秒数显示已删除
+    extern lv_obj_t *ui_Label_day;
+    extern lv_obj_t *ui_Label_year;
 
     // 更新年份显示
     if (g_current_time.year != last_year)
