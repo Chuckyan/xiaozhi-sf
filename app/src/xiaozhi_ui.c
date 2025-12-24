@@ -190,7 +190,7 @@ extern const lv_image_dsc_t funny2;  // 表情图标
 extern const lv_image_dsc_t sleepy2; // 表情图标
 extern const lv_image_dsc_t cool_gif;
 extern const lv_image_dsc_t calendar; // 日历
-extern const lv_image_dsc_t second;
+// second 图片资源声明已删除
 extern const lv_image_dsc_t img_0; // 数字图片资源
 extern const lv_image_dsc_t img_1;
 extern const lv_image_dsc_t img_2;
@@ -214,17 +214,16 @@ lv_obj_t *bluetooth_icon = NULL;        // 蓝牙图标
 lv_obj_t *img_emoji = NULL;             // 表情图标
 lv_obj_t *network_icon = NULL;          // 网络图标
 
-lv_obj_t *weather_bgimg;          // 天气背景图片
-lv_obj_t *weather_icon;           // 天气图标
-lv_obj_t *ui_Image_calendar;      // 日历图标
-lv_obj_t *standby_screen = NULL;  // 待机界面
-lv_obj_t *ui_Label_ip = NULL;     // 地址和温度标签
-lv_obj_t *last_time = NULL;       // 上次更新天气图标
-lv_obj_t *ui_Label_year = NULL;   // 年份
-lv_obj_t *ui_Label_day = NULL;    // 日期
-lv_obj_t *ui_Label_second = NULL; // 秒
-lv_obj_t *ui_Image_second = NULL; // 秒的图片
-lv_obj_t *ui_Arc2 = NULL;         // 电池容器
+lv_obj_t *weather_bgimg;         // 天气背景图片
+lv_obj_t *weather_icon;          // 天气图标
+lv_obj_t *ui_Image_calendar;     // 日历图标
+lv_obj_t *standby_screen = NULL; // 待机界面
+lv_obj_t *ui_Label_ip = NULL;    // 地址和温度标签
+lv_obj_t *last_time = NULL;      // 上次更新天气图标
+lv_obj_t *ui_Label_year = NULL;  // 年份
+lv_obj_t *ui_Label_day = NULL;   // 日期
+// 秒数显示变量已删除
+lv_obj_t *ui_Arc2 = NULL; // 电池容器
 lv_obj_t *ui_Label3 = NULL;
 
 // xiaozhi2
@@ -849,7 +848,8 @@ rt_err_t xiaozhi_ui_obj_init()
 
     standby_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(standby_screen, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_obj_set_style_bg_color(standby_screen, lv_color_hex(0x000000), 0); // 黑色
+    lv_obj_set_style_bg_color(standby_screen, lv_color_hex(0xFFFFFF),
+                              0); // 白色
 
     lv_obj_t *standby_header_row = lv_obj_create(standby_screen);
     lv_obj_remove_flag(standby_header_row, LV_OBJ_FLAG_SCROLLABLE);
@@ -879,7 +879,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_flag(img_emoji, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(img_emoji, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_img_set_zoom(img_emoji,
-                    (int)(LV_SCALE_NONE * g_scale)); // 根据缩放因子缩放
+                    (int)(77 * g_scale)); // 缩放到30% (256*0.3≈77)
 
     hour_tens_img = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(img_1);
@@ -1025,6 +1025,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_align(ui_Label_ip, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_ip, "IP.00°");
     lv_obj_add_style(ui_Label_ip, &style2, 0);
+    lv_obj_set_style_text_color(ui_Label_ip, lv_color_hex(0x000000), 0); // 黑色
 
     last_time = lv_label_create(standby_screen);
     lv_obj_set_width(last_time, LV_SIZE_CONTENT);  /// 1
@@ -1034,6 +1035,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_align(last_time, LV_ALIGN_CENTER);
     lv_label_set_text(last_time, "00:00");
     lv_obj_add_style(last_time, &style2, 0);
+    lv_obj_set_style_text_color(last_time, lv_color_hex(0x000000), 0); // 黑色
 
     // 日历
     ui_Image_calendar = lv_img_create(standby_screen);
@@ -1051,42 +1053,26 @@ rt_err_t xiaozhi_ui_obj_init()
     ui_Label_year = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_year, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_Label_year, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_year, (int)(-109 * g_scale));
-    lv_obj_set_y(ui_Label_year, (int)(49 * g_scale));
+    lv_obj_set_x(ui_Label_year, (int)(-142 * g_scale));
+    lv_obj_set_y(ui_Label_year, (int)(-177 * g_scale));
     lv_obj_set_align(ui_Label_year, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_year, "2025");
     lv_obj_add_style(ui_Label_year, &style, 0);
+    lv_obj_set_style_text_color(ui_Label_year, lv_color_hex(0x000000),
+                                0); // 黑色
 
     ui_Label_day = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_day, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_Label_day, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_day, (int)(-109 * g_scale));
-    lv_obj_set_y(ui_Label_day, (int)(74 * g_scale));
+    lv_obj_set_x(ui_Label_day, (int)(-73 * g_scale));
+    lv_obj_set_y(ui_Label_day, (int)(-177 * g_scale));
     lv_obj_set_align(ui_Label_day, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_day, "0801");
     lv_obj_add_style(ui_Label_day, &style, 0);
+    lv_obj_set_style_text_color(ui_Label_day, lv_color_hex(0x000000),
+                                0); // 黑色
 
-    // 秒
-    ui_Label_second = lv_label_create(standby_screen);
-    lv_obj_set_width(ui_Label_second, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_Label_second, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_second, (int)(-8 * g_scale));
-    lv_obj_set_y(ui_Label_second, (int)(-48 * g_scale));
-    lv_obj_set_align(ui_Label_second, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label_second, "00");
-    lv_obj_add_style(ui_Label_second, &style, 0);
-
-    ui_Image_second = lv_img_create(standby_screen);
-    LV_IMAGE_DECLARE(second);
-    lv_img_set_src(ui_Image_second, &second);
-    lv_obj_set_width(ui_Image_second, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_Image_second, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Image_second, (int)(-7 * g_scale));
-    lv_obj_set_y(ui_Image_second, (int)(-47 * g_scale));
-    lv_obj_set_align(ui_Image_second, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Image_second, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
-    lv_obj_clear_flag(ui_Image_second, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_img_set_zoom(ui_Image_second, (int)(300 * g_scale));
+    // 秒数显示已删除
 
     ui_Label3 = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);  /// 1
@@ -1095,6 +1081,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_y(ui_Label3, (int)(189 * g_scale));
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
     lv_obj_add_style(ui_Label3, &style2, 0);
+    lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0x000000), 0); // 黑色
     lv_label_set_text(ui_Label3, "等待连接");
 
     LV_IMAGE_DECLARE(ble);
