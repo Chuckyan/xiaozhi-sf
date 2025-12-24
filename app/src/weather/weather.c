@@ -610,8 +610,8 @@ void time_ui_update_callback(void)
 void weather_ui_update_callback(void)
 {
     // 更新天气信息
-    extern lv_obj_t *ui_Label_ip;  // 新UI中的温度标签
-    extern lv_obj_t *last_time;    // 新UI中的时间标签
+    extern lv_obj_t *ui_Label_ip; // 新UI中的温度标签
+    // last_time 已删除
     extern lv_obj_t *weather_icon; // 新UI中的天气图标
 
     // 更新温度显示 (使用新UI中的ui_Label_ip对象)
@@ -872,19 +872,7 @@ void weather_ui_update_callback(void)
         }
     }
 
-    // 更新上次更新时间显示 (使用新UI中的last_time对象)
-    if (last_time && g_current_weather.last_update > 0)
-    {
-        struct tm *last_update_tm = localtime(&g_current_weather.last_update);
-        if (last_update_tm)
-        {
-            char last_update_text[16];
-            snprintf(last_update_text, sizeof(last_update_text), "%02d:%02d",
-                     last_update_tm->tm_hour, last_update_tm->tm_min);
-            lv_label_set_text(last_time, last_update_text);
-            LOG_I("last_update_text:%s", last_update_text);
-        }
-    }
+    // last_time 更新已删除
 }
 
 /**

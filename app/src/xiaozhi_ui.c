@@ -219,9 +219,9 @@ lv_obj_t *weather_icon;  // 天气图标
 // ui_Image_calendar 已删除
 lv_obj_t *standby_screen = NULL; // 待机界面
 lv_obj_t *ui_Label_ip = NULL;    // 地址和温度标签
-lv_obj_t *last_time = NULL;      // 上次更新天气图标
-lv_obj_t *ui_Label_year = NULL;  // 年份
-lv_obj_t *ui_Label_day = NULL;   // 日期
+// last_time 已删除
+lv_obj_t *ui_Label_year = NULL; // 年份
+lv_obj_t *ui_Label_day = NULL;  // 日期
 // 秒数显示变量已删除
 lv_obj_t *ui_Arc2 = NULL; // 电池容器
 lv_obj_t *ui_Label3 = NULL;
@@ -886,7 +886,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(hour_tens_img, &img_1);
     lv_obj_set_width(hour_tens_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(hour_tens_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(hour_tens_img, (int)(-120 * g_scale));
+    lv_obj_set_x(hour_tens_img, (int)(-180 * g_scale));
     lv_obj_set_y(hour_tens_img, (int)(0 * g_scale));
     lv_obj_set_align(hour_tens_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(hour_tens_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -898,7 +898,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(hour_units_img, &img_2);
     lv_obj_set_width(hour_units_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(hour_units_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(hour_units_img, (int)(-40 * g_scale));
+    lv_obj_set_x(hour_units_img, (int)(-60 * g_scale));
     lv_obj_set_y(hour_units_img, (int)(0 * g_scale));
     lv_obj_set_align(hour_units_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(hour_units_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -911,7 +911,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(minute_tens_img, &img_3);
     lv_obj_set_width(minute_tens_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(minute_tens_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(minute_tens_img, (int)(40 * g_scale));
+    lv_obj_set_x(minute_tens_img, (int)(60 * g_scale));
     lv_obj_set_y(minute_tens_img, (int)(0 * g_scale));
     lv_obj_set_align(minute_tens_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(minute_tens_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -924,7 +924,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(minute_units_img, &img_4);
     lv_obj_set_width(minute_units_img, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(minute_units_img, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(minute_units_img, (int)(120 * g_scale));
+    lv_obj_set_x(minute_units_img, (int)(180 * g_scale));
     lv_obj_set_y(minute_units_img, (int)(0 * g_scale));
     lv_obj_set_align(minute_units_img, LV_ALIGN_CENTER);
     lv_obj_add_flag(minute_units_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -1028,22 +1028,14 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_style(ui_Label_ip, &style2, 0);
     lv_obj_set_style_text_color(ui_Label_ip, lv_color_hex(0x000000), 0); // 黑色
 
-    last_time = lv_label_create(standby_screen);
-    lv_obj_set_width(last_time, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(last_time, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(last_time, (int)(80 * g_scale));
-    lv_obj_set_y(last_time, (int)(159 * g_scale));
-    lv_obj_set_align(last_time, LV_ALIGN_CENTER);
-    lv_label_set_text(last_time, "00:00");
-    lv_obj_add_style(last_time, &style2, 0);
-    lv_obj_set_style_text_color(last_time, lv_color_hex(0x000000), 0); // 黑色
+    // last_time 已删除
 
     // 日历图标已删除
 
     ui_Label_year = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_year, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_Label_year, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_year, (int)(-172 * g_scale));
+    lv_obj_set_x(ui_Label_year, (int)(-190 * g_scale));
     lv_obj_set_y(ui_Label_year, (int)(-185 * g_scale));
     lv_obj_set_align(ui_Label_year, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_year, "2025");
@@ -1054,7 +1046,7 @@ rt_err_t xiaozhi_ui_obj_init()
     ui_Label_day = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_day, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_Label_day, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_day, (int)(-93 * g_scale));
+    lv_obj_set_x(ui_Label_day, (int)(-110 * g_scale));
     lv_obj_set_y(ui_Label_day, (int)(-185 * g_scale));
     lv_obj_set_align(ui_Label_day, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_day, "0801");
