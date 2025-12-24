@@ -868,7 +868,8 @@ rt_err_t xiaozhi_ui_obj_init()
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_bg_color(standby_header_row, lv_color_hex(0xFFFFFF),
                               LV_STATE_DEFAULT); // 白色
-    lv_obj_set_style_bg_opa(standby_header_row, LV_OPA_30, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(standby_header_row, LV_OPA_0,
+                            LV_STATE_DEFAULT); // 完全透明
 #if USING_TOUCH_SWITCH
     lv_obj_add_event_cb(standby_header_row, header_row_event_handler,
                         LV_EVENT_ALL, NULL);
@@ -1010,6 +1011,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_flag(weather_bgimg, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(weather_bgimg, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_img_set_zoom(weather_bgimg, (int)(550 * g_scale));
+    lv_obj_set_style_img_opa(weather_bgimg, LV_OPA_50, 0); // 50%透明度
 
     weather_icon = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(sunny);
