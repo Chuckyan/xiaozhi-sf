@@ -859,8 +859,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_flex_flow(standby_header_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(standby_header_row, LV_FLEX_ALIGN_SPACE_BETWEEN,
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_bg_color(standby_header_row, lv_color_hex(0x000000),
-                              LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(standby_header_row, lv_color_hex(0xFFFFFF),
+                              LV_STATE_DEFAULT); // 白色
     lv_obj_set_style_bg_opa(standby_header_row, LV_OPA_30, LV_STATE_DEFAULT);
 #if USING_TOUCH_SWITCH
     lv_obj_add_event_cb(standby_header_row, header_row_event_handler,
@@ -979,7 +979,8 @@ rt_err_t xiaozhi_ui_obj_init()
     // 电池电量百分比文本
     battery_percent_label = lv_label_create(battery_arc);
     lv_label_set_text_fmt(battery_percent_label, "%d%%", g_battery_level);
-    lv_obj_set_style_text_color(battery_percent_label, lv_color_white(), 0);
+    lv_obj_set_style_text_color(battery_percent_label, lv_color_hex(0x000000),
+                                0); // 黑色
     lv_obj_set_style_text_font(battery_percent_label, font_medium, 0);
     lv_obj_align(battery_percent_label, LV_ALIGN_CENTER, 0, 0); // 在圆弧中心
 

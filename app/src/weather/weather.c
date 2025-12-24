@@ -142,6 +142,7 @@ void xiaozhi_time_format_strings(date_time_t *time_info)
     }
     if (time_info->weekday < 0 || time_info->weekday > 6)
     {
+
         time_info->weekday = 0;
     }
 
