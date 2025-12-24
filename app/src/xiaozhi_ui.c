@@ -189,7 +189,8 @@ extern const lv_image_dsc_t strip;   // 天气栏
 extern const lv_image_dsc_t funny2;  // 表情图标
 extern const lv_image_dsc_t sleepy2; // 表情图标
 extern const lv_image_dsc_t cool_gif;
-extern const lv_image_dsc_t calendar; // 日历
+extern const lv_image_dsc_t background; // 背景图片
+extern const lv_image_dsc_t calendar;   // 日历
 // second 图片资源声明已删除
 extern const lv_image_dsc_t img_0; // 数字图片资源
 extern const lv_image_dsc_t img_1;
@@ -848,8 +849,14 @@ rt_err_t xiaozhi_ui_obj_init()
 
     standby_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(standby_screen, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_obj_set_style_bg_color(standby_screen, lv_color_hex(0xFFFFFF),
-                              0); // 白色
+
+    // 使用背景图片
+    LV_IMAGE_DECLARE(background);
+    lv_obj_set_style_bg_img_src(standby_screen, &background, 0);
+    lv_obj_set_style_bg_opa(standby_screen, LV_OPA_COVER, 0);
+
+    // 备用：纯色背景（如果图片加载失败）
+    // lv_obj_set_style_bg_color(standby_screen, lv_color_hex(0xFFFFFF), 0);
 
     lv_obj_t *standby_header_row = lv_obj_create(standby_screen);
     lv_obj_remove_flag(standby_header_row, LV_OBJ_FLAG_SCROLLABLE);
@@ -997,8 +1004,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(weather_bgimg, &strip);
     lv_obj_set_width(weather_bgimg, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(weather_bgimg, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(weather_bgimg, (int)(70 * g_scale));
-    lv_obj_set_y(weather_bgimg, (int)(140 * g_scale));
+    lv_obj_set_x(weather_bgimg, (int)(100 * g_scale));
+    lv_obj_set_y(weather_bgimg, (int)(130 * g_scale));
     lv_obj_set_align(weather_bgimg, LV_ALIGN_CENTER);
     lv_obj_add_flag(weather_bgimg, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(weather_bgimg, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -1010,8 +1017,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(weather_icon, &sunny);
     lv_obj_set_width(weather_icon, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(weather_icon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(weather_icon, (int)(0 * g_scale));
-    lv_obj_set_y(weather_icon, (int)(140 * g_scale));
+    lv_obj_set_x(weather_icon, (int)(30 * g_scale));
+    lv_obj_set_y(weather_icon, (int)(130 * g_scale));
     lv_obj_set_align(weather_icon, LV_ALIGN_CENTER);
     lv_obj_add_flag(weather_icon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(weather_icon, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -1021,8 +1028,8 @@ rt_err_t xiaozhi_ui_obj_init()
     ui_Label_ip = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_ip, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_Label_ip, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_ip, (int)(80 * g_scale));
-    lv_obj_set_y(ui_Label_ip, (int)(119 * g_scale));
+    lv_obj_set_x(ui_Label_ip, (int)(120 * g_scale));
+    lv_obj_set_y(ui_Label_ip, (int)(130 * g_scale));
     lv_obj_set_align(ui_Label_ip, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_ip, "IP.00°");
     lv_obj_add_style(ui_Label_ip, &style2, 0);
@@ -1040,6 +1047,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_align(ui_Label_year, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_year, "2025");
     lv_obj_add_style(ui_Label_year, &style, 0);
+    lv_obj_set_style_text_font(ui_Label_year, font, 0); // 使用大字体
     lv_obj_set_style_text_color(ui_Label_year, lv_color_hex(0x000000),
                                 0); // 黑色
 
@@ -1051,6 +1059,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_align(ui_Label_day, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_day, "0801");
     lv_obj_add_style(ui_Label_day, &style, 0);
+    lv_obj_set_style_text_font(ui_Label_day, font, 0); // 使用大字体
     lv_obj_set_style_text_color(ui_Label_day, lv_color_hex(0x000000),
                                 0); // 黑色
 
