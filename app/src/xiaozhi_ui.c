@@ -945,7 +945,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(bluetooth_icon, &ble_icon_img);
     lv_obj_set_width(bluetooth_icon, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(bluetooth_icon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(bluetooth_icon, (int)(90 * g_scale));
+    lv_obj_set_x(bluetooth_icon, (int)(80 * g_scale));
     lv_obj_set_y(bluetooth_icon, (int)(-185 * g_scale));
     lv_obj_set_align(bluetooth_icon, LV_ALIGN_CENTER);
     lv_obj_add_flag(bluetooth_icon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -958,7 +958,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_src(network_icon, &network_icon_img);
     lv_obj_set_width(network_icon, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(network_icon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(network_icon, (int)(150 * g_scale));
+    lv_obj_set_x(network_icon, (int)(140 * g_scale));
     lv_obj_set_y(network_icon, (int)(-185 * g_scale));
     lv_obj_set_align(network_icon, LV_ALIGN_CENTER);
     lv_obj_add_flag(network_icon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
@@ -1078,6 +1078,9 @@ rt_err_t xiaozhi_ui_obj_init()
     LV_IMAGE_DECLARE(ble);
     LV_IMAGE_DECLARE(cdian2);
     LV_IMAGE_DECLARE(ble_close);
+
+    // 设置对话界面屏幕背景为全透明
+    lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_0, 0);
 
     // 创建主容器 - Flex Column，垂直排列
     main_container = lv_obj_create(lv_screen_active());
