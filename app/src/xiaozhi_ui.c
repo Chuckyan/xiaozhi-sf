@@ -969,7 +969,7 @@ rt_err_t xiaozhi_ui_obj_init()
     battery_arc = lv_arc_create(standby_screen);
     lv_obj_set_size(battery_arc, (int)(60 * g_scale),
                     (int)(60 * g_scale)); // 设置圆弧大小
-    lv_obj_set_x(battery_arc, (int)(200 * g_scale));
+    lv_obj_set_x(battery_arc, (int)(210 * g_scale));
     lv_obj_set_y(battery_arc, (int)(-185 * g_scale));
     lv_obj_set_align(battery_arc, LV_ALIGN_CENTER);
     lv_arc_set_rotation(battery_arc, 270);                // 从顶部开始
@@ -1078,9 +1078,6 @@ rt_err_t xiaozhi_ui_obj_init()
     LV_IMAGE_DECLARE(ble);
     LV_IMAGE_DECLARE(cdian2);
     LV_IMAGE_DECLARE(ble_close);
-
-    // 设置对话界面屏幕背景为全透明
-    lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_0, 0);
 
     // 创建主容器 - Flex Column，垂直排列
     main_container = lv_obj_create(lv_screen_active());
