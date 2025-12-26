@@ -1184,7 +1184,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
     lv_obj_set_size(cont, CONT_W, CONT_H);
     lv_obj_set_style_bg_color(cont, lv_color_make(0X88, 0X88, 0X88), 0);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_opa(cont, LV_OPA_0, 0); // 全透明背景
     lv_obj_set_pos(cont, 0, -CONT_H);
     lv_obj_set_layout(cont, LV_LAYOUT_GRID);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_OFF);
