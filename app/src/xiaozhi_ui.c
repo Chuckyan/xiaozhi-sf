@@ -1314,8 +1314,8 @@ rt_err_t xiaozhi_ui_obj_init()
     // gif  Emoji - 居中显示
     seqimg = lv_seqimg_create(img_container);
     lv_seqimg_src_array(seqimg, angry, 57);
-    lv_seqimg_set_period(seqimg, 30); // 每帧间隔 100ms
-    lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 0);
+    lv_seqimg_set_period(seqimg, 30);             // 每帧间隔 100ms
+    lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 80); // 向下偏移到屏幕中心
     lv_img_set_zoom(seqimg, (int)(LV_SCALE_NONE)*g_scale);
     lv_seqimg_play(seqimg); // 开始播放
 
@@ -1338,7 +1338,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_style(global_label2, &style, 0);
     lv_obj_set_width(global_label2, LV_PCT(90));
     lv_obj_set_style_text_align(global_label2, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align(global_label2, LV_ALIGN_TOP_MID, 0, 30);
+    lv_obj_align(global_label2, LV_ALIGN_TOP_MID, 0,
+                 110); // 向下偏移配合表情居中
 
     show_startup_animation();
 
