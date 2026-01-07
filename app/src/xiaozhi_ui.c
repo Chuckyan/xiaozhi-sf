@@ -1305,7 +1305,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_size(img_container, scr_width, scr_height * 0.4); // 高度自适应
     lv_obj_set_style_bg_color(img_container, lv_color_hex(0x000000),
                               LV_STATE_DEFAULT); // 调试用绿色背景
-    lv_obj_set_style_bg_opa(img_container, LV_OPA_20, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(img_container, LV_OPA_0,
+                            LV_STATE_DEFAULT); // 全透明
     lv_obj_set_style_pad_all(img_container, 0, 0);
     lv_obj_set_style_margin_all(img_container, 0, 0);
     lv_obj_set_style_border_width(img_container, 0, 0);
@@ -1325,7 +1326,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_size(text_container, scr_width, scr_height * 0.4);
     lv_obj_set_style_bg_color(text_container, lv_color_hex(0x000000),
                               LV_STATE_DEFAULT); // 蓝色调试背景
-    lv_obj_set_style_bg_opa(text_container, LV_OPA_20, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(text_container, LV_OPA_0,
+                            LV_STATE_DEFAULT); // 全透明
     lv_obj_set_style_pad_all(text_container, 0, 0);
     lv_obj_set_style_margin_all(text_container, 0, 0);
     lv_obj_set_style_border_width(text_container, 0, 0);
