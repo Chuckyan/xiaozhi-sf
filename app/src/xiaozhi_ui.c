@@ -1142,17 +1142,17 @@ rt_err_t xiaozhi_ui_obj_init()
     global_label1 = lv_label_create(header_row);
     lv_label_set_long_mode(global_label1, LV_LABEL_LONG_WRAP);
     lv_obj_add_style(global_label1, &style, 0);
-    lv_obj_set_width(global_label1, LV_PCT(80));
+    lv_obj_set_width(global_label1, LV_PCT(50)); // 减小宽度确保居中
     lv_obj_set_style_text_align(global_label1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align_to(global_label1, header_row, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_flex_grow(global_label1, 1); // 弹性布局居中
 
     // 时间显示 - 电池图标左边
     chat_time_label = lv_label_create(header_row);
     lv_label_set_text(chat_time_label, "00:00");
-    lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0xFFFFFF),
-                                0); // 白色字体
+    lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0x000000),
+                                0); // 黑色字体
     lv_obj_add_style(chat_time_label, &style, 0);
-    lv_obj_set_style_translate_x(chat_time_label, -30, 0); // 向左移动30像素
+    lv_obj_set_style_translate_x(chat_time_label, -25, 0); // 向左移动25像素
 
     // 电池图标 - 放在 header_row 容器中，与 BLE 图标对称
     lv_obj_t *battery_outline = lv_obj_create(header_row);
