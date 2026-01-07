@@ -537,6 +537,17 @@ void time_ui_update_callback(void)
     }
 
     // 秒数显示已删除
+
+    // 更新对话界面时间显示
+    extern lv_obj_t *chat_time_label;
+    if (chat_time_label)
+    {
+        char time_str[8];
+        snprintf(time_str, sizeof(time_str), "%02d:%02d", g_current_time.hour,
+                 g_current_time.minute);
+        lv_label_set_text(chat_time_label, time_str);
+    }
+
     extern lv_obj_t *ui_Label_day;
     extern lv_obj_t *ui_Label_year;
 

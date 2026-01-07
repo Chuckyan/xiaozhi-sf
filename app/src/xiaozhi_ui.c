@@ -176,6 +176,7 @@ static lv_obj_t *global_label2;
 
 static lv_obj_t *seqimg;
 static lv_obj_t *global_img_ble;
+lv_obj_t *chat_time_label = NULL; // 对话界面时间标签
 
 lv_font_t *font_medium;
 
@@ -1145,6 +1146,13 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_text_align(global_label1, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align_to(global_label1, header_row, LV_ALIGN_CENTER, 0, 0);
 
+    // 时间显示 - 电池图标左边
+    chat_time_label = lv_label_create(header_row);
+    lv_label_set_text(chat_time_label, "00:00");
+    lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0xFFFFFF),
+                                0); // 白色字体
+    lv_obj_add_style(chat_time_label, &style, 0);
+
     // 电池图标 - 放在 header_row 容器中，与 BLE 图标对称
     lv_obj_t *battery_outline = lv_obj_create(header_row);
     lv_obj_set_style_border_width(battery_outline, 2, 0); // 边框宽度
@@ -1315,10 +1323,10 @@ rt_err_t xiaozhi_ui_obj_init()
     // gif  Emoji - 居中显示
     seqimg = lv_seqimg_create(img_container);
     lv_seqimg_src_array(seqimg, angry, 57);
-    lv_seqimg_set_period(seqimg, 30);            // 每帧间隔 100ms
-    lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 0); // 居中显示
-    lv_img_set_zoom(seqimg, (int)(LV_SCALE_NONE)*g_scale);
-    lv_seqimg_play(seqimg); // 开始播放
+    lv_seqimg_set_period(seqimg, 30);             // 每帧间隔 100ms
+    lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 10); // 向下偏移10像素
+    lv_img_set_zoom(seqimg, (int)(LV_SCALE_NONE * 1.1 * g_scale)); // 放大10%
+    lv_seqimg_play(seqimg);                                        // 开始播放
 
     // ====== 底部文本容器 text_container 占 40% 屏幕高度 ======
 
