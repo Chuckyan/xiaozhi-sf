@@ -1152,6 +1152,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0xFFFFFF),
                                 0); // 白色字体
     lv_obj_add_style(chat_time_label, &style, 0);
+    lv_obj_set_style_translate_x(chat_time_label, -40, 0); // 向左移动40像素
 
     // 电池图标 - 放在 header_row 容器中，与 BLE 图标对称
     lv_obj_t *battery_outline = lv_obj_create(header_row);
@@ -1325,7 +1326,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_seqimg_src_array(seqimg, angry, 57);
     lv_seqimg_set_period(seqimg, 30);             // 每帧间隔 100ms
     lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 10); // 向下偏移10像素
-    lv_img_set_zoom(seqimg, (int)(LV_SCALE_NONE * 1.1 * g_scale)); // 放大10%
+    lv_img_set_zoom(seqimg, (int)(LV_SCALE_NONE * 1.2 * g_scale)); // 放大20%
     lv_seqimg_play(seqimg);                                        // 开始播放
 
     // ====== 底部文本容器 text_container 占 40% 屏幕高度 ======
