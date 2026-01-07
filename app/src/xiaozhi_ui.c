@@ -1152,7 +1152,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0xFFFFFF),
                                 0); // 白色字体
     lv_obj_add_style(chat_time_label, &style, 0);
-    lv_obj_set_style_translate_x(chat_time_label, -40, 0); // 向左移动40像素
+    lv_obj_set_style_translate_x(chat_time_label, -30, 0); // 向左移动30像素
 
     // 电池图标 - 放在 header_row 容器中，与 BLE 图标对称
     lv_obj_t *battery_outline = lv_obj_create(header_row);
@@ -1168,6 +1168,7 @@ rt_err_t xiaozhi_ui_obj_init()
                OUTLINE_H * g_scale);
 #endif // defualt
     lv_obj_add_flag(battery_outline, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_set_style_translate_x(battery_outline, 5, 0); // 向右移动5像素
 
 /*---------------------------------下滑菜单-----------------*/
 #define CONT_W scr_width
