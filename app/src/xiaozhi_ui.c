@@ -1138,12 +1138,14 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_img_set_zoom(global_img_ble,
                     (int)(LV_SCALE_NONE * g_scale)); // 根据缩放因子缩放
 
-    // Top Label - 居中显示
+    // Top Label - 居中显示（覆盖在状态栏中间）
     global_label1 = lv_label_create(header_row);
     lv_label_set_long_mode(global_label1, LV_LABEL_LONG_WRAP);
     lv_obj_add_style(global_label1, &style, 0);
-    lv_obj_set_width(global_label1, LV_SIZE_CONTENT);
+    lv_obj_set_width(global_label1, LV_PCT(80));
     lv_obj_set_style_text_align(global_label1, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align_to(global_label1, header_row, LV_ALIGN_CENTER, 0,
+                    0); // 居中覆盖
 
     // 时间显示 - 电池图标左边
     chat_time_label = lv_label_create(header_row);
@@ -1151,6 +1153,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0x000000),
                                 0); // 黑色字体
     lv_obj_add_style(chat_time_label, &style, 0);
+    lv_obj_set_style_translate_x(chat_time_label, -25, 0); // 向左移动25像素
 
     // 电池图标 - 放在 header_row 容器中
     lv_obj_t *battery_outline = lv_obj_create(header_row);
@@ -1166,6 +1169,7 @@ rt_err_t xiaozhi_ui_obj_init()
                OUTLINE_H * g_scale);
 #endif // defualt
     lv_obj_add_flag(battery_outline, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_set_style_translate_x(battery_outline, 5, 0); // 向右移动5像素
 
 /*---------------------------------下滑菜单-----------------*/
 #define CONT_W scr_width
