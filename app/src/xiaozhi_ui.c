@@ -901,6 +901,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_flag(hour_tens_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(hour_tens_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_img_set_zoom(hour_tens_img, (int)(350 * g_scale));
+    lv_obj_set_style_img_recolor_opa(hour_tens_img, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_img_opa(hour_tens_img, LV_OPA_COVER, 0);
 
     hour_units_img = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(img_2);
@@ -913,6 +915,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_flag(hour_units_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(hour_units_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_img_set_zoom(hour_units_img, (int)(350 * g_scale));
+    lv_obj_set_style_img_recolor_opa(hour_units_img, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_img_opa(hour_units_img, LV_OPA_COVER, 0);
 
     minute_tens_img = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(img_3);
@@ -926,6 +930,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_flag(minute_tens_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(minute_tens_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_img_set_zoom(minute_tens_img, (int)(350 * g_scale));
+    lv_obj_set_style_img_recolor_opa(minute_tens_img, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_img_opa(minute_tens_img, LV_OPA_COVER, 0);
 
     minute_units_img = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(img_4);
@@ -939,6 +945,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_flag(minute_units_img, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(minute_units_img, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_img_set_zoom(minute_units_img, (int)(350 * g_scale));
+    lv_obj_set_style_img_recolor_opa(minute_units_img, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_img_opa(minute_units_img, LV_OPA_COVER, 0);
 
     bluetooth_icon = lv_img_create(standby_screen);
     LV_IMAGE_DECLARE(ble_icon_img);
