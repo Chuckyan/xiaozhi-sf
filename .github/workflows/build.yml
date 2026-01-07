@@ -45,12 +45,20 @@ jobs:
         cd app/project
         scons --board=${{ matrix.target }} -j$(nproc) --board_search_path="../boards"
     
-    - name: Upload build artifacts
+    - name: Prepare firmware files
+      run: |
+        mkdir -p firmware/${{ matrix.target }}
+        cp app/project/build_${{ matrix.target }}_hcpu/bootloader/bootloader.bin firmware/${{ matrix.target }}/
+        cp app/project/build_${{ matrix.target }}_hcpu/ftab/ftab.bin firmware/${{ matrix.target }}/
+        cp app/project/build_${{ matrix.target }}_hcpu/main.bin/ER_IROM1.bin firmware/${{ matrix.target }}/
+        cp app/project/build_${{ matrix.target }}_hcpu/main.bin/ER_IROM2.bin firmware/${{ matrix.target }}/
+        cp app/project/build_${{ matrix.target }}_hcpu/main.bin/ER_IROM3.bin firmware/${{ matrix.target }}/
+
+    - name: Upload firmware artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: build-${{ matrix.target }}
-        path: |
-          app/project/build_*
+        name: firmware-${{ matrix.target }}
+        path: firmware/${{ matrix.target }}/
         retention-days: 7
 
     - name: Prepare release files
