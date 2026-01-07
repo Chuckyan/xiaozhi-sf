@@ -1302,7 +1302,8 @@ rt_err_t xiaozhi_ui_obj_init()
     // ====== 中间 GIF 图片容器 img_container ======
     img_container = lv_obj_create(main_container);
     lv_obj_remove_flag(img_container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(img_container, scr_width, scr_height * 0.4); // 高度自适应
+    lv_obj_set_size(img_container, scr_width,
+                    scr_height * 0.55); // 增大高度确保内容可见
     lv_obj_set_style_bg_color(img_container, lv_color_hex(0x000000),
                               LV_STATE_DEFAULT); // 调试用绿色背景
     lv_obj_set_style_bg_opa(img_container, LV_OPA_0,
@@ -1314,8 +1315,8 @@ rt_err_t xiaozhi_ui_obj_init()
     // gif  Emoji - 居中显示
     seqimg = lv_seqimg_create(img_container);
     lv_seqimg_src_array(seqimg, angry, 57);
-    lv_seqimg_set_period(seqimg, 30);             // 每帧间隔 100ms
-    lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 80); // 向下偏移到屏幕中心
+    lv_seqimg_set_period(seqimg, 30);            // 每帧间隔 100ms
+    lv_obj_align(seqimg, LV_ALIGN_CENTER, 0, 0); // 居中显示
     lv_img_set_zoom(seqimg, (int)(LV_SCALE_NONE)*g_scale);
     lv_seqimg_play(seqimg); // 开始播放
 
@@ -1323,7 +1324,7 @@ rt_err_t xiaozhi_ui_obj_init()
 
     lv_obj_t *text_container = lv_obj_create(main_container);
     lv_obj_remove_flag(text_container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(text_container, scr_width, scr_height * 0.4);
+    lv_obj_set_size(text_container, scr_width, scr_height * 0.35); // 调整高度
     lv_obj_set_style_bg_color(text_container, lv_color_hex(0x000000),
                               LV_STATE_DEFAULT); // 蓝色调试背景
     lv_obj_set_style_bg_opa(text_container, LV_OPA_0,
@@ -1338,8 +1339,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_style(global_label2, &style, 0);
     lv_obj_set_width(global_label2, LV_PCT(90));
     lv_obj_set_style_text_align(global_label2, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align(global_label2, LV_ALIGN_TOP_MID, 0,
-                 110); // 向下偏移配合表情居中
+    lv_obj_align(global_label2, LV_ALIGN_TOP_MID, 0, 20); // 恢复正常偏移
 
     show_startup_animation();
 
