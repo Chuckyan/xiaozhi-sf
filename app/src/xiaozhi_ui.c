@@ -1144,8 +1144,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_add_style(global_label1, &style, 0);
     lv_obj_set_width(global_label1, LV_PCT(80));
     lv_obj_set_style_text_align(global_label1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align_to(global_label1, header_row, LV_ALIGN_CENTER, 0,
-                    0); // 居中覆盖
+    lv_obj_align_to(global_label1, header_row, LV_ALIGN_CENTER, 15,
+                    0); // 居中+向右偏移15px
 
     // 时间显示 - 电池图标左边
     chat_time_label = lv_label_create(header_row);
