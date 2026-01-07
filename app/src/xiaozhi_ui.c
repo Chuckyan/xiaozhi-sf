@@ -1153,7 +1153,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0x000000),
                                 0); // 黑色字体
     lv_obj_add_style(chat_time_label, &style, 0);
-    lv_obj_set_style_translate_x(chat_time_label, -225, 0); // 向左移动225像素
+    lv_obj_set_style_translate_x(chat_time_label, -125, 0); // 向左移动225像素
 
     // 电池图标 - 放在 header_row 容器中
     lv_obj_t *battery_outline = lv_obj_create(header_row);
