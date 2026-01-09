@@ -556,8 +556,8 @@ void time_ui_update_callback(void)
     {
         if (ui_Label_year)
         {
-            char year_text[8];
-            snprintf(year_text, sizeof(year_text), "%d", g_current_time.year);
+            char year_text[16];
+            snprintf(year_text, sizeof(year_text), "%d年", g_current_time.year);
             lv_label_set_text(ui_Label_year, year_text);
         }
     }
@@ -566,8 +566,8 @@ void time_ui_update_callback(void)
     {
         if (ui_Label_day)
         {
-            char date_text[8];
-            snprintf(date_text, sizeof(date_text), "%02d%02d",
+            char date_text[16];
+            snprintf(date_text, sizeof(date_text), "%02d月%02d日",
                      g_current_time.month, g_current_time.day);
             lv_label_set_text(ui_Label_day, date_text);
         }
