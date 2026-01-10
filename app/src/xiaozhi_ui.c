@@ -1064,7 +1064,7 @@ rt_err_t xiaozhi_ui_obj_init()
     ui_Label_day = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_day, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_Label_day, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_Label_day, (int)(-90 * g_scale));
+    lv_obj_set_x(ui_Label_day, (int)(-75 * g_scale));
     lv_obj_set_y(ui_Label_day, (int)(-185 * g_scale));
     lv_obj_set_align(ui_Label_day, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_day, "0801");
