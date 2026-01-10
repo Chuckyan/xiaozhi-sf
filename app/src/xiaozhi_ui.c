@@ -1058,8 +1058,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_align(ui_Label_year, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_year, "2025");
     lv_obj_add_style(ui_Label_year, &style, 0);
-    lv_obj_set_style_text_color(ui_Label_year, lv_color_hex(0x000000),
-                                0); // 黑色
+    lv_obj_set_style_text_color(ui_Label_year, lv_color_hex(0xFFFFFF),
+                                0); // 白色
 
     ui_Label_day = lv_label_create(standby_screen);
     lv_obj_set_width(ui_Label_day, LV_SIZE_CONTENT);  /// 1
@@ -1069,8 +1069,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_align(ui_Label_day, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label_day, "0801");
     lv_obj_add_style(ui_Label_day, &style, 0);
-    lv_obj_set_style_text_color(ui_Label_day, lv_color_hex(0x000000),
-                                0); // 黑色
+    lv_obj_set_style_text_color(ui_Label_day, lv_color_hex(0xFFFFFF),
+                                0); // 白色
 
     // 秒数显示已删除
 
