@@ -1158,8 +1158,8 @@ rt_err_t xiaozhi_ui_obj_init()
     // 时间显示 - 电池图标左边
     chat_time_label = lv_label_create(header_row);
     lv_label_set_text(chat_time_label, "00:00");
-    lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0x000000),
-                                0); // 黑色字体
+    lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0xFFFFFF),
+                                0); // 白色字体
     lv_obj_add_style(chat_time_label, &style, 0);
     lv_obj_set_style_translate_x(chat_time_label, -160, 0); // 向左移动225像素
 
