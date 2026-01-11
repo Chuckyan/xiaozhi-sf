@@ -1139,12 +1139,7 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_border_width(spacer, 0, 0);
     lv_obj_set_size(spacer, SCALE_DPX(40), LV_SIZE_CONTENT); // 宽度为 40dp
 
-    // BLE 图标 - 左上角
-    global_img_ble = lv_img_create(header_row);
-    lv_img_set_src(global_img_ble, &ble);
-    lv_obj_set_size(global_img_ble, SCALE_DPX(24), SCALE_DPX(24)); // 24dp 图标
-    lv_img_set_zoom(global_img_ble,
-                    (int)(LV_SCALE_NONE * g_scale)); // 根据缩放因子缩放
+    // BLE 图标已删除
 
     // Top Label - 居中显示（覆盖在状态栏中间）
     global_label1 = lv_label_create(header_row);
@@ -1161,7 +1156,8 @@ rt_err_t xiaozhi_ui_obj_init()
     lv_obj_set_style_text_color(chat_time_label, lv_color_hex(0xFFFFFF),
                                 0); // 白色字体
     lv_obj_add_style(chat_time_label, &style, 0);
-    lv_obj_set_style_translate_x(chat_time_label, -160, 0); // 向左移动225像素
+    lv_obj_set_style_translate_x(chat_time_label, -185,
+                                 0); // 向左移动（删除蓝牙图标后调整位置）
 
     // 电池图标 - 放在 header_row 容器中
     lv_obj_t *battery_outline = lv_obj_create(header_row);
