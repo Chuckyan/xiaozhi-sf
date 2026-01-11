@@ -2537,7 +2537,8 @@ void xiaozhi_ui_task(void *args)
                 }
                 break;
             case UI_MSG_UPDATE_BLE:
-                if (msg->data)
+                // 对话界面蓝牙图标已删除，添加空指针检查
+                if (msg->data && global_img_ble != NULL)
                 {
                     if (strcmp(msg->data, "open") == 0)
                     {
