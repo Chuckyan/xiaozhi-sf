@@ -1339,7 +1339,7 @@ rt_err_t xiaozhi_ui_obj_init()
 
     lv_obj_t *text_container = lv_obj_create(main_container);
     lv_obj_remove_flag(text_container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(text_container, scr_width, scr_height * 0.35); // 调整高度
+    lv_obj_set_size(text_container, scr_width, scr_height * 0.45); // 调整高度
     lv_obj_set_style_bg_color(text_container, lv_color_hex(0x000000),
                               LV_STATE_DEFAULT); // 蓝色调试背景
     lv_obj_set_style_bg_opa(text_container, LV_OPA_0,
