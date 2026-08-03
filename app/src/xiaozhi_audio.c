@@ -461,32 +461,79 @@ void xz_audio_init()
     udp_recv(udp_pcb, xz_udp_recv, NULL);
 }
 #endif
+typedef struct
+{
+    float b0, b1, b2;
+    float a1, a2;
+    float x1, x2;
+    float y1, y2;
+} xz_biquad_t;
+
+// 4-band cascaded Biquad EQ tuned for LM4871M/TR amplifier + micro-speaker @ 24kHz
+// Stage 0: HPF 120Hz (cut sub-bass, prevent LM4871 overload & cone rattle)
+// Stage 1: Peaking 400Hz -2.5dB (cut boxy resonance)
+// Stage 2: Peaking 3.5kHz +4.0dB (boost speech presence & consonant clarity/resolution)
+// Stage 3: High Shelf 7.5kHz +3.0dB (boost 24kHz high frequency sparkle)
+static xz_biquad_t g_xz_eq[4] = {
+    {0.978030f, -1.956060f, 0.978030f, -1.955577f, 0.956541f, 0, 0, 0, 0},
+    {0.985764f, -1.875830f, 0.900400f, -1.875830f, 0.886163f, 0, 0, 0, 0},
+    {1.121630f, -0.964314f, 0.462428f, -0.964314f, 0.584058f, 0, 0, 0, 0},
+    {1.141940f,  0.418640f, 0.223170f,  0.556850f, 0.226920f, 0, 0, 0, 0}
+};
+
+static inline int16_t xz_soft_clip(float in)
+{
+    if (in > 28000.0f)
+    {
+        float diff = in - 28000.0f;
+        in = 28000.0f + diff / (1.0f + diff / 4767.0f);
+    }
+    else if (in < -28000.0f)
+    {
+        float diff = -in - 28000.0f;
+        in = -28000.0f - diff / (1.0f + diff / 4767.0f);
+    }
+    if (in > 32767.0f) return 32767;
+    if (in < -32768.0f) return -32768;
+    return (int16_t)in;
+}
+
+static void xz_audio_dsp_process(int16_t *pcm, uint32_t samples)
+{
+    for (uint32_t i = 0; i < samples; i++)
+    {
+        float x = (float)pcm[i];
+        for (int stage = 0; stage < 4; stage++)
+        {
+            xz_biquad_t *bq = &g_xz_eq[stage];
+            float y = bq->b0 * x + bq->b1 * bq->x1 + bq->b2 * bq->x2 - bq->a1 * bq->y1 - bq->a2 * bq->y2;
+            bq->x2 = bq->x1;
+            bq->x1 = x;
+            bq->y2 = bq->y1;
+            bq->y1 = y;
+            x = y;
+        }
+        pcm[i] = xz_soft_clip(x);
+    }
+}
+
 static void audio_write_and_wait(xz_audio_t *thiz, uint8_t *data,
                                  uint32_t data_len)
 {
     int ret;
-#if PKG_XIAOZHI_USING_AEC
-    uint32_t bytes;
-    bytes =
-        sifli_resample_process(thiz->resample, (int16_t *)data, data_len, 0);
-#endif
     int try_times = 0;
+    // 运行本地 4 级参量 EQ 与平滑防破音 DSP 增强
+    xz_audio_dsp_process((int16_t *)data, data_len / 2);
     while (!thiz->is_exit)
     {
-#if PKG_XIAOZHI_USING_AEC
-        ret = audio_write(thiz->speaker,
-                          (uint8_t *)sifli_resample_get_output(thiz->resample),
-                          bytes);
-#else
         ret = audio_write(thiz->speaker, data, data_len);
-#endif
         if (ret)
         {
             break;
         }
         rt_thread_mdelay(10);
         try_times++;
-        if (try_times > 10)
+        if (try_times > 50)
         {
             LOG_I("speaker write failed len=%d\n", data_len);
             LOG_I("speaker busy, tx=%d\r\n", thiz->is_tx_enable);
@@ -508,9 +555,9 @@ static void xz_opus_thread_entry(void *p)
     opus_encoder_ctl(thiz->encoder, OPUS_SET_VBR(1));
     opus_encoder_ctl(thiz->encoder, OPUS_SET_VBR_CONSTRAINT(1));
 
-    opus_encoder_ctl(thiz->encoder, OPUS_SET_BITRATE(16000));
+    opus_encoder_ctl(thiz->encoder, OPUS_SET_BITRATE(32000));
     opus_encoder_ctl(thiz->encoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
-    opus_encoder_ctl(thiz->encoder, OPUS_SET_COMPLEXITY(0));
+    opus_encoder_ctl(thiz->encoder, OPUS_SET_COMPLEXITY(5));
     opus_encoder_ctl(thiz->encoder, OPUS_SET_LSB_DEPTH(16));
 
     opus_encoder_ctl(thiz->encoder, OPUS_SET_DTX(0));
@@ -581,7 +628,11 @@ static void xz_opus_thread_entry(void *p)
             if (res != XZ_SPK_FRAME_LEN / 2)
             {
                 LOG_I("decode out samples=%d\n", res);
-                // RT_ASSERT(0);
+                // 解码异常时重置解码器状态防止错误累积
+                if (res < 0)
+                {
+                    opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
+                }
             }
             if (res > 0)
             {
@@ -635,12 +686,12 @@ void xz_aec_mic_open(xz_audio_t *thiz)
         audio_parameter_t pa = {0};
         pa.write_bits_per_sample = 16;
         pa.write_channnel_num = 1;
-        pa.write_samplerate = 16000;
+        pa.write_samplerate = 24000;
         pa.read_bits_per_sample = 16;
         pa.read_channnel_num = 1;
         pa.read_samplerate = 16000;
         pa.read_cache_size = 0;
-        pa.write_cache_size = 32000;
+        pa.write_cache_size = 48000;
         pa.is_need_3a = 0;
         thiz->mic = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TXRX, &pa,
                                mic_callback, NULL);
@@ -726,6 +777,23 @@ void xz_speaker_open(xz_audio_t *thiz)
     LOG_I("speaker on");
     xiaozhi_ui_chat_status("\u8bb2\u8bdd\u4e2d...");
     thiz->is_tx_enable = 1;
+    // 重置DSP EQ滤镜状态
+    for (int i = 0; i < 4; i++)
+    {
+        g_xz_eq[i].x1 = 0; g_xz_eq[i].x2 = 0;
+        g_xz_eq[i].y1 = 0; g_xz_eq[i].y2 = 0;
+    }
+    // 重置Opus解码器状态，避免残留状态导致新流爆音
+    if (thiz->decoder)
+    {
+        opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
+    }
+    // 重置重采样器状态，避免相位漂移累积
+    if (thiz->resample)
+    {
+        sifli_resample_close(thiz->resample);
+        thiz->resample = sifli_resample_open(1, 24000, 16000);
+    }
     #endif
 #else
     if (!thiz->speaker)
@@ -839,12 +907,12 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         audio_parameter_t pa = {0};
         pa.write_bits_per_sample = 16;
         pa.write_channnel_num = 1;
-        pa.write_samplerate = 16000;
+        pa.write_samplerate = 24000;
         pa.read_bits_per_sample = 16;
         pa.read_channnel_num = 1;
         pa.read_samplerate = 16000;
         pa.read_cache_size = 0;
-        pa.write_cache_size = 32000;
+        pa.write_cache_size = 48000;
         pa.is_need_3a = 0;
         pa.disable_uplink_agc = 1;
         thiz->mic = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TXRX, &pa,
@@ -880,7 +948,7 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         // 为下行链路解码队列分配内存
         for (int i = 0; i < XZ_DOWNLINK_QUEUE_NUM; i++)
         {
-            thiz->downlink_queue[i].size = 512;
+            thiz->downlink_queue[i].size = 1024;
             thiz->downlink_queue[i].data =
                 opus_heap_malloc(thiz->downlink_queue[i].size);
             RT_ASSERT(thiz->downlink_queue[i].data);
