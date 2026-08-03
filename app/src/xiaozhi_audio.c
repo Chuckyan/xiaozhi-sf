@@ -830,7 +830,7 @@ void xz_speaker_open(xz_audio_t *thiz)
     #if STOP_SPEAKER_WHEN_DETECTED_MIC_VOICE
     LOG_I("speaker on");
     xiaozhi_ui_chat_status("\u8bb2\u8bdd\u4e2d...");
-    thiz->is_tx_enable = 1;
+    thiz->is_tx_enable = 0;
     // 重置DSP EQ滤镜状态
     for (int i = 0; i < 4; i++)
     {
@@ -848,6 +848,7 @@ void xz_speaker_open(xz_audio_t *thiz)
         sifli_resample_close(thiz->resample);
         thiz->resample = sifli_resample_open(1, 24000, 16000);
     }
+    thiz->is_tx_enable = 1;
     #endif
 #else
     if (!thiz->speaker)
