@@ -567,6 +567,17 @@ static void audio_write_and_wait(xz_audio_t *thiz, uint8_t *data,
     int try_times = 0;
     // 运行本地 4 级参量 EQ 与平滑防破音 DSP 增强
     xz_audio_dsp_process((int16_t *)data, data_len / 2);
+
+#if PKG_XIAOZHI_USING_AEC
+    uint32_t bytes;
+    if (thiz->resample)
+    {
+        bytes = sifli_resample_process(thiz->resample, (int16_t *)data, data_len, 0);
+        data = (uint8_t *)sifli_resample_get_output(thiz->resample);
+        data_len = bytes;
+    }
+#endif
+
     while (!thiz->is_exit)
     {
         ret = audio_write(thiz->speaker, data, data_len);
@@ -729,12 +740,12 @@ void xz_aec_mic_open(xz_audio_t *thiz)
         audio_parameter_t pa = {0};
         pa.write_bits_per_sample = 16;
         pa.write_channnel_num = 1;
-        pa.write_samplerate = 24000;
+        pa.write_samplerate = 16000;
         pa.read_bits_per_sample = 16;
         pa.read_channnel_num = 1;
         pa.read_samplerate = 16000;
         pa.read_cache_size = 0;
-        pa.write_cache_size = 48000;
+        pa.write_cache_size = 32000;
         pa.is_need_3a = 0;
         thiz->mic = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TXRX, &pa,
                                mic_callback, NULL);
@@ -950,12 +961,12 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         audio_parameter_t pa = {0};
         pa.write_bits_per_sample = 16;
         pa.write_channnel_num = 1;
-        pa.write_samplerate = 24000;
+        pa.write_samplerate = 16000;
         pa.read_bits_per_sample = 16;
         pa.read_channnel_num = 1;
         pa.read_samplerate = 16000;
         pa.read_cache_size = 0;
-        pa.write_cache_size = 48000;
+        pa.write_cache_size = 32000;
         pa.is_need_3a = 0;
         pa.disable_uplink_agc = 1;
         thiz->mic = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TXRX, &pa,
@@ -991,7 +1002,7 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         // 为下行链路解码队列分配内存
         for (int i = 0; i < XZ_DOWNLINK_QUEUE_NUM; i++)
         {
-            thiz->downlink_queue[i].size = 1024;
+            thiz->downlink_queue[i].size = 512;
             thiz->downlink_queue[i].data =
                 opus_heap_malloc(thiz->downlink_queue[i].size);
             RT_ASSERT(thiz->downlink_queue[i].data);
