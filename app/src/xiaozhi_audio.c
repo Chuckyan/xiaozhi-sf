@@ -689,9 +689,21 @@ void xz_aec_mic_close(xz_audio_t *thiz)
     if (thiz->mic)
     {
         LOG_I("mic off");
+        if (thiz->speaker == thiz->mic)
+        {
+            thiz->speaker = NULL;
+        }
         audio_close(thiz->mic);
         thiz->mic = NULL;
         thiz->is_rx_enable = 0;
+        if (thiz->rb_opus_encode_input)
+        {
+            rt_ringbuffer_reset(thiz->rb_opus_encode_input);
+        }
+        if (thiz->rb_vad_cache)
+        {
+            rt_ringbuffer_reset(thiz->rb_vad_cache);
+        }
     }
 }
 void xz_mic_close(xz_audio_t *thiz)
@@ -868,7 +880,7 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         // 为下行链路解码队列分配内存
         for (int i = 0; i < XZ_DOWNLINK_QUEUE_NUM; i++)
         {
-            thiz->downlink_queue[i].size = 256;
+            thiz->downlink_queue[i].size = 512;
             thiz->downlink_queue[i].data =
                 opus_heap_malloc(thiz->downlink_queue[i].size);
             RT_ASSERT(thiz->downlink_queue[i].data);

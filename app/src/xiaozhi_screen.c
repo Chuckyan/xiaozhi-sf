@@ -83,7 +83,7 @@ static void sleep_countdown_cb(lv_timer_t *timer)
     
     if (sleep_label && sleep_countdown > 0)
     {
-        char num[2] = {0};
+        char num[16] = {0};
         snprintf(num, sizeof(num), "%d", sleep_countdown);
         lv_label_set_text(sleep_label, num);
         lv_obj_center(sleep_label);
@@ -96,7 +96,7 @@ static void sleep_countdown_cb(lv_timer_t *timer)
             lv_obj_delete(sleep_label);
             sleep_label = NULL;
         }
-                if(update_time_ui_timer)
+        if(update_time_ui_timer)
         {
             rt_timer_stop(update_time_ui_timer);//睡眠停止ui更新
         }
@@ -113,10 +113,6 @@ static void sleep_countdown_cb(lv_timer_t *timer)
         if(aec_enabled)
         {
             rt_pm_request(PM_SLEEP_MODE_IDLE);
-        }
-        else
-        {
-           rt_pm_release(PM_SLEEP_MODE_IDLE);
         }
         lv_obj_clean(sleep_screen);
         rt_thread_delay(100);
