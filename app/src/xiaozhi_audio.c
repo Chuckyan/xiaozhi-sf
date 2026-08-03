@@ -205,6 +205,47 @@ RT_WEAK void simulate_button_released()
 }
 #endif
 
+static float g_mic_hpf_x = 0.0f;
+static float g_mic_hpf_y = 0.0f;
+
+static inline int16_t xz_mic_soft_clip(float in)
+{
+    if (in > 26000.0f)
+    {
+        float diff = in - 26000.0f;
+        in = 26000.0f + diff / (1.0f + diff / 5000.0f);
+    }
+    else if (in < -26000.0f)
+    {
+        float diff = -in - 26000.0f;
+        in = -26000.0f - diff / (1.0f + diff / 5000.0f);
+    }
+    if (in > 32767.0f) return 32767;
+    if (in < -32768.0f) return -32768;
+    return (int16_t)in;
+}
+
+static void xz_mic_dsp_process(int16_t *pcm, uint32_t samples, int is_speech)
+{
+    for (uint32_t i = 0; i < samples; i++)
+    {
+        float x = (float)pcm[i];
+        // 1. 80Hz HPF (切除DC偏置与<80Hz低频风噪/震动噪)
+        float y = 0.9695f * (g_mic_hpf_y + x - g_mic_hpf_x);
+        g_mic_hpf_x = x;
+        g_mic_hpf_y = y;
+
+        // 2. 智能动态噪声门限 (非说话静音期衰减电路与环境底噪)
+        if (!is_speech)
+        {
+            y *= 0.25f; // -12dB 抑噪
+        }
+
+        // 3. 麦克风输入软限幅防爆音
+        pcm[i] = xz_mic_soft_clip(y);
+    }
+}
+
 static int mic_callback(audio_server_callback_cmt_t cmd,
                         void *callback_userdata, uint32_t reserved)
 {
@@ -220,6 +261,8 @@ static int mic_callback(audio_server_callback_cmt_t cmd,
             int ret = WebRtcVad_Process(thiz->handle, 16000, (int16_t *)p->data,
                                         p->data_len /
                                             2); // 检测是否是人声 返回1是人声
+            // 运行麦克风预处理降噪算法（80Hz高通+静音期底噪门限+防爆音限幅）
+            xz_mic_dsp_process((int16_t *)p->data, p->data_len / 2, ret);
             if (vad_enable) // 如果开起了不打断功能 1是不打断
             {
                 if (XZ_DEVICE_STATE != kDeviceStateIdle)
