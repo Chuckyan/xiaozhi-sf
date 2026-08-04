@@ -74,8 +74,6 @@ extern rt_mailbox_t g_ui_task_mb;
 
 bt_app_t g_bt_app_env;
 rt_mailbox_t g_bt_app_mb;
-static bt_cm_bonded_dev_t g_bonded_devs[8];
-static uint8_t g_bonded_count = 0;
 BOOL g_pan_connected = FALSE;
 BOOL first_pan_connected = FALSE;
 int first_reconnect_attempts = 0;
@@ -860,12 +858,16 @@ int main(void)
             const char *local_name = BLUETOOTH_NAME;
 #endif
             bt_interface_set_local_name(strlen(local_name), (void *)local_name);
-            // 1. 从 Flash (NVDS) 读取多台已配对手机的 MAC 地址列表（最多支持 8 台）
-            g_bonded_count = 8;
-            if (bt_cm_get_bonded_devs(g_bonded_devs, &g_bonded_count) == 0 && g_bonded_count > 0)
+            // 1. 从 Flash (NVDS) 读取多台已配对手机的 MAC 地址
+            uint8_t bonded_num = bt_cm_get_bonded_dev_num();
+            if (bonded_num > 0)
             {
-                g_bt_app_env.bd_addr = g_bonded_devs[0].bd_addr;
-                LOG_I("Loaded %d bonded phone MACs from Flash", g_bonded_count);
+                bt_cm_bonded_dev_t *dev = bt_cm_get_bonded_dev(0);
+                if (dev)
+                {
+                    g_bt_app_env.bd_addr = dev->mac;
+                    LOG_I("Loaded bonded phone MAC from Flash (%d devices found)", bonded_num);
+                }
             }
             // 2. 自动开启多设备轮询蓝牙回连
             reconnect_attempts = 0;
@@ -980,15 +982,20 @@ int main(void)
             if (reconnect_attempts <= MAX_RECONNECT_ATTEMPTS) 
             {
                 // 如果保存了多台手机，轮询尝试连接每一台已配对手机
-                if (g_bonded_count > 0)
+                uint8_t bonded_num = bt_cm_get_bonded_dev_num();
+                if (bonded_num > 0)
                 {
-                    uint8_t index = (reconnect_attempts - 1) % g_bonded_count;
-                    g_bt_app_env.bd_addr = g_bonded_devs[index].bd_addr;
-                    LOG_I("Polling connect to phone #%d/%d (%02x:%02x:%02x:%02x:%02x:%02x)",
-                          index + 1, g_bonded_count,
-                          g_bt_app_env.bd_addr.addr[5], g_bt_app_env.bd_addr.addr[4],
-                          g_bt_app_env.bd_addr.addr[3], g_bt_app_env.bd_addr.addr[2],
-                          g_bt_app_env.bd_addr.addr[1], g_bt_app_env.bd_addr.addr[0]);
+                    uint8_t index = (reconnect_attempts - 1) % bonded_num;
+                    bt_cm_bonded_dev_t *dev = bt_cm_get_bonded_dev(index);
+                    if (dev)
+                    {
+                        g_bt_app_env.bd_addr = dev->mac;
+                        LOG_I("Polling connect to phone #%d/%d (%02x:%02x:%02x:%02x:%02x:%02x)",
+                              index + 1, bonded_num,
+                              g_bt_app_env.bd_addr.addr[5], g_bt_app_env.bd_addr.addr[4],
+                              g_bt_app_env.bd_addr.addr[3], g_bt_app_env.bd_addr.addr[2],
+                              g_bt_app_env.bd_addr.addr[1], g_bt_app_env.bd_addr.addr[0]);
+                    }
                 }
                 bt_interface_conn_ext((char *)&g_bt_app_env.bd_addr, BT_PROFILE_HID);
             }
