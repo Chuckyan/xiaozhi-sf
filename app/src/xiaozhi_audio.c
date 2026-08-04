@@ -609,7 +609,8 @@ static void xz_opus_thread_entry(void *p)
 
     opus_encoder_ctl(thiz->encoder,
                      OPUS_SET_MAX_BANDWIDTH(OPUS_BANDWIDTH_WIDEBAND));
-    opus_encoder_ctl(thiz->encoder, OPUS_SET_BANDWIDTH(OPUS_AUTO));
+    opus_encoder_ctl(thiz->encoder,
+                     OPUS_SET_BANDWIDTH(OPUS_BANDWIDTH_WIDEBAND));
 
     opus_encoder_ctl(thiz->encoder, OPUS_SET_FORCE_MODE(MODE_SILK_ONLY));
     while (!thiz->is_exit)
@@ -956,9 +957,6 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         thiz->mic = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TXRX, &pa,
                                mic_callback, NULL);
         RT_ASSERT(thiz->mic);
-
-        mic_gain_decrease(4);
-
         thiz->speaker = thiz->mic;
         thiz->is_rx_enable = 1; // 麦克风常开
         thiz->is_tx_enable = 1;
@@ -968,7 +966,7 @@ void xz_audio_decoder_encoder_open(uint8_t is_websocket)
         RT_ASSERT(!ret);
         ret = WebRtcVad_Init(thiz->handle);
         RT_ASSERT(!ret);
-        ret = WebRtcVad_set_mode(thiz->handle, 3); // 0 ~ 3
+        ret = WebRtcVad_set_mode(thiz->handle, 1); // 0 ~ 3 (1: 高灵敏度)
         RT_ASSERT(!ret);
 
 #endif
