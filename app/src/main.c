@@ -858,19 +858,6 @@ int main(void)
             const char *local_name = BLUETOOTH_NAME;
 #endif
             bt_interface_set_local_name(strlen(local_name), (void *)local_name);
-            // 1. 从 Flash (NVDS) 读取已配对手机的 MAC 地址
-            bt_cm_bonded_dev_t *dev = bt_cm_get_bonded_dev();
-            if (dev)
-            {
-                g_bt_app_env.bd_addr = *(bt_notify_device_mac_t *)dev;
-                LOG_I("Loaded bonded phone MAC from Flash: %02x:%02x:%02x:%02x:%02x:%02x",
-                      g_bt_app_env.bd_addr.addr[5], g_bt_app_env.bd_addr.addr[4],
-                      g_bt_app_env.bd_addr.addr[3], g_bt_app_env.bd_addr.addr[2],
-                      g_bt_app_env.bd_addr.addr[1], g_bt_app_env.bd_addr.addr[0]);
-            }
-            // 2. 自动开启蓝牙回连
-            reconnect_attempts = 0;
-            rt_mb_send(g_bt_app_mb, BT_APP_RECONNECT);
         }
         else if (value == BT_APP_CONNECT_PAN_SUCCESS)
         {
@@ -980,11 +967,6 @@ int main(void)
 
             if (reconnect_attempts <= MAX_RECONNECT_ATTEMPTS) 
             {
-                bt_cm_bonded_dev_t *dev = bt_cm_get_bonded_dev();
-                if (dev)
-                {
-                    g_bt_app_env.bd_addr = *(bt_notify_device_mac_t *)dev;
-                }
                 bt_interface_conn_ext((char *)&g_bt_app_env.bd_addr, BT_PROFILE_HID);
             }
             else
