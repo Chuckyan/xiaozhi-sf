@@ -858,6 +858,9 @@ int main(void)
             const char *local_name = BLUETOOTH_NAME;
 #endif
             bt_interface_set_local_name(strlen(local_name), (void *)local_name);
+            // 自动开启开机蓝牙主动回连手机
+            reconnect_attempts = 0;
+            rt_mb_send(g_bt_app_mb, BT_APP_RECONNECT);
         }
         else if (value == BT_APP_CONNECT_PAN_SUCCESS)
         {
