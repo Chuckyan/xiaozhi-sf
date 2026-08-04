@@ -112,15 +112,18 @@ void xz_audio_send(uint8_t *data, int len)
                  (uint32_t *)&(nonce[0]), AES_MODE_CTR);
     struct pbuf *pbuf =
         pbuf_alloc(PBUF_TRANSPORT, len + sizeof(nonce) + 32, PBUF_RAM);
-    if (pbuf && g_xz_context.port)
+    if (pbuf)
     {
-        uint8_t *payload = (uint8_t *)pbuf->payload;
-        memcpy(payload, nonce, sizeof(nonce));
-        payload += sizeof(nonce);
-        HAL_AES_run(AES_ENC, data, payload, len);
-        LOCK_TCPIP_CORE();
-        udp_sendto(udp_pcb, pbuf, &(g_xz_context.udp_addr), g_xz_context.port);
-        UNLOCK_TCPIP_CORE();
+        if (g_xz_context.port)
+        {
+            uint8_t *payload = (uint8_t *)pbuf->payload;
+            memcpy(payload, nonce, sizeof(nonce));
+            payload += sizeof(nonce);
+            HAL_AES_run(AES_ENC, data, payload, len);
+            LOCK_TCPIP_CORE();
+            udp_sendto(udp_pcb, pbuf, &(g_xz_context.udp_addr), g_xz_context.port);
+            UNLOCK_TCPIP_CORE();
+        }
         pbuf_free(pbuf);
     }
 }
@@ -128,6 +131,8 @@ void xz_audio_send(uint8_t *data, int len)
 void xz_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                  const ip_addr_t *addr, u16_t port)
 {
+    if (!p) return;
+
     if (memcmp(addr, &(g_xz_context.udp_addr), sizeof(ip_addr_t)) == 0 &&
         port == g_xz_context.port)
     {
@@ -139,12 +144,14 @@ void xz_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         if (p->len < sizeof(nonce))
         {
             rt_kprintf("Invalid audio packet size: %u\n", p->len);
-            goto end;
+            pbuf_free(p);
+            return;
         }
         if (data[0] != 0x01)
         {
             rt_kprintf("Invalid audio packet type: %x", data[0]);
-            goto end;
+            pbuf_free(p);
+            return;
         }
         if (sequence < g_xz_context.remote_sequence)
         {
@@ -158,7 +165,8 @@ void xz_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                 rt_kprintf(
                     "Received audio packet with old sequence: %lu, expected: %lu\n",
                     sequence, g_xz_context.remote_sequence);
-                goto end;
+                pbuf_free(p);
+                return;
             }
         }
         if (sequence != g_xz_context.remote_sequence + 1)
@@ -176,13 +184,13 @@ void xz_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         data += sizeof(nonce);
         size = p->len - sizeof(nonce);
         xz_audio_downlink(data, size, &nonce[0], 1);
-    end:
-        pbuf_free(p);
     }
     else
     {
         rt_kprintf("invalid udp\n");
     }
+
+    pbuf_free(p);
 }
 #ifdef XIAOZHI_USING_MQT
 void simulate_button_pressed()
