@@ -213,23 +213,15 @@ RT_WEAK void simulate_button_released()
 }
 #endif
 
-static float g_mic_hpf_x = 0.0f;
-static float g_mic_hpf_y = 0.0f;
+static int32_t g_mic_hpf_x = 0;
+static int32_t g_mic_hpf_y = 0;
 
-static inline int16_t xz_mic_soft_clip(float in)
+static inline int16_t xz_mic_soft_clip_int(int32_t in)
 {
-    if (in > 26000.0f)
-    {
-        float diff = in - 26000.0f;
-        in = 26000.0f + diff / (1.0f + diff / 5000.0f);
-    }
-    else if (in < -26000.0f)
-    {
-        float diff = -in - 26000.0f;
-        in = -26000.0f - diff / (1.0f + diff / 5000.0f);
-    }
-    if (in > 32767.0f) return 32767;
-    if (in < -32768.0f) return -32768;
+    if (in > 26000) in = 26000 + (in - 26000) / 2;
+    else if (in < -26000) in = -26000 + (in + 26000) / 2;
+    if (in > 32767) return 32767;
+    if (in < -32768) return -32768;
     return (int16_t)in;
 }
 
@@ -237,20 +229,20 @@ static void xz_mic_dsp_process(int16_t *pcm, uint32_t samples, int is_speech)
 {
     for (uint32_t i = 0; i < samples; i++)
     {
-        float x = (float)pcm[i];
-        // 1. 80Hz HPF (切除DC偏置与<80Hz低频风噪/震动噪)
-        float y = 0.9695f * (g_mic_hpf_y + x - g_mic_hpf_x);
+        int32_t x = (int32_t)pcm[i];
+        // 1. 80Hz HPF (Q15定点数切除DC偏置与<80Hz低频风噪/震动噪)
+        int32_t y = (31768 * (g_mic_hpf_y + x - g_mic_hpf_x)) >> 15;
         g_mic_hpf_x = x;
         g_mic_hpf_y = y;
 
-        // 2. 智能动态噪声门限 (非说话静音期衰减电路与环境底噪)
+        // 2. 智能动态噪声门限 (非说话静音期衰减电路与环境底噪 -12dB)
         if (!is_speech)
         {
-            y *= 0.25f; // -12dB 抑噪
+            y >>= 2;
         }
 
         // 3. 麦克风输入软限幅防爆音
-        pcm[i] = xz_mic_soft_clip(y);
+        pcm[i] = xz_mic_soft_clip_int(y);
     }
 }
 
@@ -514,38 +506,26 @@ void xz_audio_init()
 #endif
 typedef struct
 {
-    float b0, b1, b2;
-    float a1, a2;
-    float x1, x2;
-    float y1, y2;
-} xz_biquad_t;
+    int32_t b0, b1, b2;
+    int32_t a1, a2;
+    int32_t x1, x2;
+    int32_t y1, y2;
+} xz_biquad_int_t;
 
-// 4-band cascaded Biquad EQ tuned for LM4871M/TR amplifier + micro-speaker @ 24kHz
-// Stage 0: HPF 120Hz (cut sub-bass, prevent LM4871 overload & cone rattle)
-// Stage 1: Peaking 400Hz -2.5dB (cut boxy resonance)
-// Stage 2: Peaking 3.5kHz +4.0dB (boost speech presence & consonant clarity/resolution)
-// Stage 3: High Shelf 7.5kHz +3.0dB (boost 24kHz high frequency sparkle)
-static xz_biquad_t g_xz_eq[4] = {
-    {0.978030f, -1.956060f, 0.978030f, -1.955577f, 0.956541f, 0, 0, 0, 0},
-    {0.985764f, -1.875830f, 0.900400f, -1.875830f, 0.886163f, 0, 0, 0, 0},
-    {1.121630f, -0.964314f, 0.462428f, -0.964314f, 0.584058f, 0, 0, 0, 0},
-    {1.141940f,  0.418640f, 0.223170f,  0.556850f, 0.226920f, 0, 0, 0, 0}
+// 4-band Q14 fixed-point Biquad EQ tuned for LM4871M/TR amplifier + micro-speaker @ 24kHz
+static xz_biquad_int_t g_xz_eq[4] = {
+    { 16024, -32048,  16024, -32040,  15672, 0, 0, 0, 0},
+    { 16151, -30733,  14752, -30733,  14519, 0, 0, 0, 0},
+    { 18377, -15800,   7576, -15800,   9569, 0, 0, 0, 0},
+    { 18710,   6859,   3656,   9123,   3718, 0, 0, 0, 0}
 };
 
-static inline int16_t xz_soft_clip(float in)
+static inline int16_t xz_soft_clip_int(int32_t in)
 {
-    if (in > 28000.0f)
-    {
-        float diff = in - 28000.0f;
-        in = 28000.0f + diff / (1.0f + diff / 4767.0f);
-    }
-    else if (in < -28000.0f)
-    {
-        float diff = -in - 28000.0f;
-        in = -28000.0f - diff / (1.0f + diff / 4767.0f);
-    }
-    if (in > 32767.0f) return 32767;
-    if (in < -32768.0f) return -32768;
+    if (in > 28000) in = 28000 + (in - 28000) / 2;
+    else if (in < -28000) in = -28000 + (in + 28000) / 2;
+    if (in > 32767) return 32767;
+    if (in < -32768) return -32768;
     return (int16_t)in;
 }
 
@@ -553,18 +533,18 @@ static void xz_audio_dsp_process(int16_t *pcm, uint32_t samples)
 {
     for (uint32_t i = 0; i < samples; i++)
     {
-        float x = (float)pcm[i];
+        int32_t x = (int32_t)pcm[i];
         for (int stage = 0; stage < 4; stage++)
         {
-            xz_biquad_t *bq = &g_xz_eq[stage];
-            float y = bq->b0 * x + bq->b1 * bq->x1 + bq->b2 * bq->x2 - bq->a1 * bq->y1 - bq->a2 * bq->y2;
+            xz_biquad_int_t *bq = &g_xz_eq[stage];
+            int32_t y = (bq->b0 * x + bq->b1 * bq->x1 + bq->b2 * bq->x2 - bq->a1 * bq->y1 - bq->a2 * bq->y2) >> 14;
             bq->x2 = bq->x1;
             bq->x1 = x;
             bq->y2 = bq->y1;
             bq->y1 = y;
             x = y;
         }
-        pcm[i] = xz_soft_clip(x);
+        pcm[i] = xz_soft_clip_int(x);
     }
 }
 
@@ -851,12 +831,6 @@ void xz_speaker_open(xz_audio_t *thiz)
     {
         opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
     }
-    // 重置重采样器状态，避免相位漂移累积
-    if (thiz->resample)
-    {
-        sifli_resample_close(thiz->resample);
-        thiz->resample = sifli_resample_open(1, 24000, 16000);
-    }
     thiz->is_tx_enable = 1;
     #endif
 #else
@@ -1136,14 +1110,9 @@ void xz_audio_downlink(uint8_t *data, uint32_t size, uint32_t *aes_value,
     // thiz->inited);
     rt_enter_critical();
     idle = rt_slist_first(&thiz->downlink_decode_idle);
-    if (!idle)
+    if (idle)
     {
-        // 当下行队列全满时，直接回收最旧的一帧 busy 节点，不阻塞 LwIP 网络线程！
-        idle = rt_slist_first(&thiz->downlink_decode_busy);
-        if (idle)
-        {
-            rt_slist_remove(&thiz->downlink_decode_busy, idle);
-        }
+        rt_slist_remove(&thiz->downlink_decode_idle, idle);
     }
     rt_exit_critical();
 
