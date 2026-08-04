@@ -148,10 +148,18 @@ void xz_udp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         }
         if (sequence < g_xz_context.remote_sequence)
         {
-            rt_kprintf(
-                "Received audio packet with old sequence: %lu, expected: %lu\n",
-                sequence, g_xz_context.remote_sequence);
-            goto end;
+            // 当新对话流开始（序列号重置为1）或序列号跳变时，自动重置同步序列号
+            if (sequence <= 10 || (g_xz_context.remote_sequence - sequence > 100))
+            {
+                g_xz_context.remote_sequence = sequence;
+            }
+            else
+            {
+                rt_kprintf(
+                    "Received audio packet with old sequence: %lu, expected: %lu\n",
+                    sequence, g_xz_context.remote_sequence);
+                goto end;
+            }
         }
         if (sequence != g_xz_context.remote_sequence + 1)
         {
@@ -830,6 +838,7 @@ void xz_speaker_open(xz_audio_t *thiz)
     #if STOP_SPEAKER_WHEN_DETECTED_MIC_VOICE
     LOG_I("speaker on");
     xiaozhi_ui_chat_status("\u8bb2\u8bdd\u4e2d...");
+    g_xz_context.remote_sequence = 0;
     thiz->is_tx_enable = 0;
     // 重置DSP EQ滤镜状态
     for (int i = 0; i < 4; i++)
@@ -1125,10 +1134,19 @@ void xz_audio_downlink(uint8_t *data, uint32_t size, uint32_t *aes_value,
     }
     // LOG_I("%s tx=%d inited=%d\r\n", __FUNCTION__, thiz->is_tx_enable,
     // thiz->inited);
-wait_speaker:
     rt_enter_critical();
     idle = rt_slist_first(&thiz->downlink_decode_idle);
+    if (!idle)
+    {
+        // 当下行队列全满时，直接回收最旧的一帧 busy 节点，不阻塞 LwIP 网络线程！
+        idle = rt_slist_first(&thiz->downlink_decode_busy);
+        if (idle)
+        {
+            rt_slist_remove(&thiz->downlink_decode_busy, idle);
+        }
+    }
     rt_exit_critical();
+
     if (idle)
     {
         xz_decode_queue_t *queue =
@@ -1152,23 +1170,10 @@ wait_speaker:
             memcpy(queue->data, data, size);
         }
         rt_enter_critical();
-        rt_slist_remove(&thiz->downlink_decode_idle, idle);
         rt_slist_append(&thiz->downlink_decode_busy, idle);
         rt_exit_critical();
 
         rt_event_send(thiz->event, XZ_EVENT_DOWNLINK);
-    }
-    else
-    {
-        LOG_I("speaker busy\r\n");
-        LOG_I("speaker busy mic=%d\r\n", (uint32_t)thiz->mic);
-        LOG_I("speaker busy speaker=%d\r\n", (uint32_t)thiz->speaker);
-        try_times++;
-        if (try_times < 20)
-        {
-            rt_thread_mdelay(10);
-            goto wait_speaker;
-        }
     }
 }
 
