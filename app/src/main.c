@@ -858,7 +858,18 @@ int main(void)
             const char *local_name = BLUETOOTH_NAME;
 #endif
             bt_interface_set_local_name(strlen(local_name), (void *)local_name);
-            // 自动开启开机蓝牙主动回连手机
+            // 1. 从 Flash (NVDS) 读取已配对手机的 MAC 地址
+            bt_cm_bonded_dev_t devs[2];
+            uint8_t count = 2;
+            if (bt_cm_get_bonded_devs(devs, &count) == 0 && count > 0)
+            {
+                g_bt_app_env.bd_addr = devs[0].bd_addr;
+                LOG_I("Loaded bonded phone MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+                      g_bt_app_env.bd_addr.addr[5], g_bt_app_env.bd_addr.addr[4],
+                      g_bt_app_env.bd_addr.addr[3], g_bt_app_env.bd_addr.addr[2],
+                      g_bt_app_env.bd_addr.addr[1], g_bt_app_env.bd_addr.addr[0]);
+            }
+            // 2. 自动开启开机蓝牙主动回连手机
             reconnect_attempts = 0;
             rt_mb_send(g_bt_app_mb, BT_APP_RECONNECT);
         }
