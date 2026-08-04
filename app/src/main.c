@@ -862,7 +862,7 @@ int main(void)
             bt_cm_bonded_dev_t *dev = bt_cm_get_bonded_dev();
             if (dev)
             {
-                g_bt_app_env.bd_addr = dev->addr;
+                g_bt_app_env.bd_addr = *(bt_notify_device_mac_t *)dev;
                 LOG_I("Loaded bonded phone MAC from Flash: %02x:%02x:%02x:%02x:%02x:%02x",
                       g_bt_app_env.bd_addr.addr[5], g_bt_app_env.bd_addr.addr[4],
                       g_bt_app_env.bd_addr.addr[3], g_bt_app_env.bd_addr.addr[2],
@@ -983,7 +983,7 @@ int main(void)
                 bt_cm_bonded_dev_t *dev = bt_cm_get_bonded_dev();
                 if (dev)
                 {
-                    g_bt_app_env.bd_addr = dev->addr;
+                    g_bt_app_env.bd_addr = *(bt_notify_device_mac_t *)dev;
                 }
                 bt_interface_conn_ext((char *)&g_bt_app_env.bd_addr, BT_PROFILE_HID);
             }
