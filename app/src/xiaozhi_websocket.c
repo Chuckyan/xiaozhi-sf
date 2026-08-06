@@ -293,8 +293,10 @@ err_t my_wsapp_fn(int code, char *buf, size_t len)
     }
     else
     {
+        static uint32_t ws_audio_seq = 0;
+        ws_audio_seq++;
         // Receive Audio Data
-        xz_audio_downlink(buf, len, NULL, 0);
+        xz_audio_downlink(buf, len, NULL, 0, ws_audio_seq);
     }
     return 0;
 }

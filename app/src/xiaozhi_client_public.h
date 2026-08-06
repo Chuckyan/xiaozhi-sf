@@ -72,6 +72,7 @@ typedef struct
     uint8_t *data;
     uint16_t data_len;
     uint16_t size;
+    uint32_t sequence; // 记录帧的网络序列号
 } xz_decode_queue_t;
 
 typedef struct

@@ -102,7 +102,7 @@ void ws_send_listen_start(void *ws, char *session_id, enum ListeningMode mode);
 void ws_send_listen_stop(void *ws, char *session_id);
 void xz_audio_decoder_encoder_close(void);
 void xz_audio_downlink(uint8_t *data, uint32_t size, uint32_t *aes_value,
-                       uint8_t need_aes);
+                       uint8_t need_aes, uint32_t sequence);
 void xz_audio_send_using_websocket(uint8_t *data, int len);
 void xz_set_lcd_brightness(uint16_t level);
 #endif
