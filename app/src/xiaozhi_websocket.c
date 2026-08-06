@@ -42,7 +42,7 @@
 
 #define MAX_WSOCK_HDR_LEN 4096
 #define WEBSOC_RECONNECT 4
-#define SPEAKING_THRESHOLD_MS (5 * 60 * 1000) // 小智讲话时间阈值
+#define SPEAKING_THRESHOLD_MS (15 * 60 * 1000) // 小智讲话时间阈值（15分钟）
 
 extern BOOL g_pan_connected;
 extern xz_audio_t *thiz;

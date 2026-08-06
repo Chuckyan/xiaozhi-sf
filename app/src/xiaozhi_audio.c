@@ -823,23 +823,24 @@ void xz_mic_close(xz_audio_t *thiz)
 
 void xz_speaker_open(xz_audio_t *thiz)
 {
+    // 每次 speaker 开启时重置所有 DSP 滤波器状态，防止长时间 Q14 定点数漂移
+    for (int i = 0; i < 4; i++)
+    {
+        g_xz_eq[i].x1 = 0; g_xz_eq[i].x2 = 0;
+        g_xz_eq[i].y1 = 0; g_xz_eq[i].y2 = 0;
+    }
+    // 重置 Opus 解码器状态，避免残留状态导致新流爆音
+    if (thiz->decoder)
+    {
+        opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
+    }
+
 #if PKG_XIAOZHI_USING_AEC
     #if STOP_SPEAKER_WHEN_DETECTED_MIC_VOICE
     LOG_I("speaker on");
     xiaozhi_ui_chat_status("\u8bb2\u8bdd\u4e2d...");
     g_xz_context.remote_sequence = 0;
     thiz->is_tx_enable = 0;
-    // 重置DSP EQ滤镜状态
-    for (int i = 0; i < 4; i++)
-    {
-        g_xz_eq[i].x1 = 0; g_xz_eq[i].x2 = 0;
-        g_xz_eq[i].y1 = 0; g_xz_eq[i].y2 = 0;
-    }
-    // 重置Opus解码器状态，避免残留状态导致新流爆音
-    if (thiz->decoder)
-    {
-        opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
-    }
     thiz->is_tx_enable = 1;
     #endif
 #else
@@ -1092,6 +1093,15 @@ void xz_audio_decoder_encoder_close(void)
 void reinit_audio()
 {
     xz_audio_t *thiz = &xz_audio;
+    // 重置全局 static DSP 状态，防止 reinit 后残留数值漂移
+    for (int i = 0; i < 4; i++)
+    {
+        g_xz_eq[i].x1 = 0; g_xz_eq[i].x2 = 0;
+        g_xz_eq[i].y1 = 0; g_xz_eq[i].y2 = 0;
+    }
+    g_mic_hpf_x = 0;
+    g_mic_hpf_y = 0;
+
     xz_aec_mic_close(thiz);
     xz_speaker_close(thiz);
     xz_audio_decoder_encoder_close();
