@@ -559,6 +559,8 @@ static void xz_audio_dsp_process(int16_t *pcm, uint32_t samples)
         {
             xz_biquad_int_t *bq = &g_xz_eq[stage];
             int32_t y = (bq->b0 * x + bq->b1 * bq->x1 + bq->b2 * bq->x2 - bq->a1 * bq->y1 - bq->a2 * bq->y2) >> 14;
+            // 增加极微小的泄漏(Leakage)机制，强制消除定点数滤波器的直流偏置与极限环振荡(Limit Cycle)，防止长时间运行后炸音
+            y = y - (y >> 12);
             bq->x2 = bq->x1;
             bq->x1 = x;
             bq->y2 = bq->y1;
@@ -751,7 +753,7 @@ static void xz_opus_thread_entry(void *p)
                 if (gap <= 3) {
                     // 对于少量丢包，使用 Opus 原生 PLC 平滑过渡，防止卡顿和跳音
                     for (uint32_t i = 0; i < gap; i++) {
-                        opus_decode(thiz->decoder, NULL, 0, (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN, 0);
+                        opus_decode(thiz->decoder, NULL, 0, (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN / 2, 0);
                         audio_write_and_wait(thiz, (uint8_t *)thiz->downlink_decode_out, XZ_SPK_FRAME_LEN);
                     }
                 } else {
@@ -763,7 +765,7 @@ static void xz_opus_thread_entry(void *p)
             g_audio_diag.decode_total++;
             opus_int32 res = opus_decode(
                 thiz->decoder, (const uint8_t *)queue->data, queue->data_len,
-                (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN,
+                (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN / 2,
                 0);
 
             if (res != XZ_SPK_FRAME_LEN / 2)
