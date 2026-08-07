@@ -641,13 +641,36 @@ static void xz_opus_thread_entry(void *p)
     g_audio_diag.last_report_tick = rt_tick_get();
 
     uint32_t last_decoded_sequence = 0; // 新增：用于跟踪丢帧
+    bool is_buffering = true;           // 新增：防卡顿 jitter buffer 状态
+    const int JITTER_BUFFER_MIN = 8;    // 积累 8 帧 (480ms) 后再开始播放
 
     while (!thiz->is_exit)
     {
         rt_uint32_t evt = 0;
-        rt_event_recv(thiz->event, XZ_EVENT_ALL,
+        rt_uint32_t wait_ticks = RT_WAITING_FOREVER;
+
+        if (is_buffering && thiz->is_tx_enable)
+        {
+            rt_enter_critical();
+            bool has_data = (rt_slist_first(&thiz->downlink_decode_busy) != RT_NULL);
+            rt_exit_critical();
+            if (has_data)
+            {
+                wait_ticks = rt_tick_from_millisecond(100);
+            }
+        }
+
+        rt_err_t ret = rt_event_recv(thiz->event, XZ_EVENT_ALL,
                       RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,
-                      RT_WAITING_FOREVER, &evt);
+                      wait_ticks, &evt);
+
+        if (ret != RT_EOK && is_buffering)
+        {
+            // Jitter buffer timeout, force play!
+            is_buffering = false;
+            evt = XZ_EVENT_DOWNLINK;
+        }
+
         if (evt & XZ_EVENT_EXIT)
         {
             break;
@@ -690,6 +713,17 @@ static void xz_opus_thread_entry(void *p)
             int busy_count = 0;
             rt_slist_t *tmp_node;
             rt_slist_for_each(tmp_node, &thiz->downlink_decode_busy) busy_count++;
+
+            // Jitter Buffer logic
+            if (is_buffering) {
+                if (busy_count < JITTER_BUFFER_MIN) {
+                    rt_exit_critical();
+                    continue; // wait for more packets
+                } else {
+                    is_buffering = false;
+                    rt_kprintf("AUDIO: Jitter buffer ready (%d frames)\n", busy_count);
+                }
+            }
             
             // 防时钟漂移/防队列撑满：如果积压超过 100 帧（6秒延迟），直接丢弃一半老的帧追赶实时进度
             if (busy_count > XZ_DOWNLINK_QUEUE_NUM - 28) 
@@ -759,6 +793,12 @@ static void xz_opus_thread_entry(void *p)
             if (rt_slist_first(&thiz->downlink_decode_busy))
             {
                 need_decode_gain = true;
+            }
+            else
+            {
+                // 队列被彻底抽干，发生了欠载（Underrun）
+                // 下次收到数据时，强制重新进入 Jitter Buffer 缓冲状态
+                is_buffering = true;
             }
             rt_exit_critical();
 
