@@ -64,6 +64,7 @@
 #define VOICE_STOP_TIMES 30
 
 #define XZ_AUDIO_VERSION "xz_audio_verson: 1.0"
+// Force re-trigger GitHub Actions build
 
 #ifdef XIAOZHI_USING_MQTT
     #define XZ_DEVICE_STATE mqtt_g_state
