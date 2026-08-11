@@ -559,8 +559,10 @@ static void xz_audio_dsp_process(int16_t *pcm, uint32_t samples)
         {
             xz_biquad_int_t *bq = &g_xz_eq[stage];
             int32_t y = (bq->b0 * x + bq->b1 * bq->x1 + bq->b2 * bq->x2 - bq->a1 * bq->y1 - bq->a2 * bq->y2) >> 14;
-            // 增加极微小的泄漏(Leakage)机制，强制消除定点数滤波器的直流偏置与极限环振荡(Limit Cycle)，防止长时间运行后炸音
-            y = y - (y >> 12);
+            // 终极无死区泄漏(Leakage)：确保直流偏置绝对归零，彻底消灭哪怕最微小的极限环
+            if (y > 0) y -= (y >> 12) + 1;
+            else if (y < 0) y -= (y >> 12) - 1;
+            
             bq->x2 = bq->x1;
             bq->x1 = x;
             bq->y2 = bq->y1;
@@ -801,6 +803,8 @@ static void xz_opus_thread_entry(void *p)
                 // 队列被彻底抽干，发生了欠载（Underrun）
                 // 下次收到数据时，强制重新进入 Jitter Buffer 缓冲状态
                 is_buffering = true;
+                // 趁着欠载停顿，顺手重置 Opus 解码器状态，消除长时间播放带来的定点/浮点累积误差 (Drift)
+                opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
             }
             rt_exit_critical();
 
