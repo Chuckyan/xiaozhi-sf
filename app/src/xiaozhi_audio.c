@@ -558,10 +558,14 @@ static void xz_audio_dsp_process(int16_t *pcm, uint32_t samples)
         for (int stage = 0; stage < 4; stage++)
         {
             xz_biquad_int_t *bq = &g_xz_eq[stage];
-            int32_t y = (bq->b0 * x + bq->b1 * bq->x1 + bq->b2 * bq->x2 - bq->a1 * bq->y1 - bq->a2 * bq->y2) >> 14;
-            // 终极无死区泄漏(Leakage)：确保直流偏置绝对归零，彻底消灭哪怕最微小的极限环
-            if (y > 0) y -= (y >> 12) + 1;
-            else if (y < 0) y -= (y >> 12) - 1;
+            // 采用 64 位宽累加器计算，彻底杜绝连续大音量/唱歌时的 32 位算术溢出与翻转失真
+            int64_t acc = (int64_t)bq->b0 * x + (int64_t)bq->b1 * bq->x1 + (int64_t)bq->b2 * bq->x2
+                        - (int64_t)bq->a1 * bq->y1 - (int64_t)bq->a2 * bq->y2;
+            int32_t y = (int32_t)(acc >> 14);
+
+            // 限制状态范围防止突发冲击
+            if (y > 65535) y = 65535;
+            else if (y < -65536) y = -65536;
             
             bq->x2 = bq->x1;
             bq->x1 = x;
@@ -644,36 +648,14 @@ static void xz_opus_thread_entry(void *p)
     g_audio_diag.start_tick = rt_tick_get();
     g_audio_diag.last_report_tick = rt_tick_get();
 
-    uint32_t last_decoded_sequence = 0; // 新增：用于跟踪丢帧
-    bool is_buffering = true;           // 新增：防卡顿 jitter buffer 状态
-    const int JITTER_BUFFER_MIN = 8;    // 积累 8 帧 (480ms) 后再开始播放
+    uint32_t last_decoded_sequence = 0; // 用于跟踪丢帧
 
     while (!thiz->is_exit)
     {
         rt_uint32_t evt = 0;
-        rt_uint32_t wait_ticks = RT_WAITING_FOREVER;
-
-        if (is_buffering && thiz->is_tx_enable)
-        {
-            rt_enter_critical();
-            bool has_data = (rt_slist_first(&thiz->downlink_decode_busy) != RT_NULL);
-            rt_exit_critical();
-            if (has_data)
-            {
-                wait_ticks = rt_tick_from_millisecond(100);
-            }
-        }
-
         rt_err_t ret = rt_event_recv(thiz->event, XZ_EVENT_ALL,
-                      RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,
-                      wait_ticks, &evt);
-
-        if (ret != RT_EOK && is_buffering)
-        {
-            // Jitter buffer timeout, force play!
-            is_buffering = false;
-            evt = XZ_EVENT_DOWNLINK;
-        }
+                                     RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,
+                                     RT_WAITING_FOREVER, &evt);
 
         if (evt & XZ_EVENT_EXIT)
         {
@@ -712,104 +694,89 @@ static void xz_opus_thread_entry(void *p)
 
         if ((evt & XZ_EVENT_DOWNLINK) && thiz->is_tx_enable)
         {
-            rt_slist_t *decode;
+            rt_slist_t *decode = RT_NULL;
             rt_enter_critical();
             int busy_count = 0;
             rt_slist_t *tmp_node;
             rt_slist_for_each(tmp_node, &thiz->downlink_decode_busy) busy_count++;
 
-            // Jitter Buffer logic
-            if (is_buffering) {
-                if (busy_count < JITTER_BUFFER_MIN) {
-                    rt_exit_critical();
-                    continue; // wait for more packets
-                } else {
-                    is_buffering = false;
-                    rt_kprintf("AUDIO: Jitter buffer ready (%d frames)\n", busy_count);
-                }
-            }
-            
-            // 防时钟漂移/防队列撑满：如果积压超过 100 帧（6秒延迟），直接丢弃一半老的帧追赶实时进度
+            // 防网络抖动堆积/防时钟严重滞后：如果积压超过 100 帧（6秒延迟），丢弃一半老帧追赶进度
             if (busy_count > XZ_DOWNLINK_QUEUE_NUM - 28) 
             {
                 int drop_count = busy_count / 2;
                 rt_kprintf("AUDIO WARN: Queue backlogged (%d frames), dropping %d oldest frames to catch up!\n", busy_count, drop_count);
                 for (int i = 0; i < drop_count; i++) {
                     rt_slist_t *drop_node = rt_slist_first(&thiz->downlink_decode_busy);
-                    rt_slist_remove(&thiz->downlink_decode_busy, drop_node);
-                    rt_slist_append(&thiz->downlink_decode_idle, drop_node);
+                    if (drop_node) {
+                        rt_slist_remove(&thiz->downlink_decode_busy, drop_node);
+                        rt_slist_append(&thiz->downlink_decode_idle, drop_node);
+                    }
                 }
                 opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
             }
             decode = rt_slist_first(&thiz->downlink_decode_busy);
             rt_exit_critical();
-            RT_ASSERT(decode);
-            xz_decode_queue_t *queue =
-                rt_container_of(decode, xz_decode_queue_t, node);
 
-            // 丢帧检测与 Opus PLC (包丢失隐藏)
-            if (last_decoded_sequence != 0 && queue->sequence > last_decoded_sequence + 1)
+            if (decode)
             {
-                uint32_t gap = queue->sequence - last_decoded_sequence - 1;
-                rt_kprintf("AUDIO: Seq jump detected %lu -> %lu (gap %lu)\n", last_decoded_sequence, queue->sequence, gap);
-                if (gap <= 3) {
-                    // 对于少量丢包，使用 Opus 原生 PLC 平滑过渡，防止卡顿和跳音
-                    for (uint32_t i = 0; i < gap; i++) {
-                        opus_decode(thiz->decoder, NULL, 0, (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN / 2, 0);
-                        audio_write_and_wait(thiz, (uint8_t *)thiz->downlink_decode_out, XZ_SPK_FRAME_LEN);
+                xz_decode_queue_t *queue =
+                    rt_container_of(decode, xz_decode_queue_t, node);
+
+                // 丢帧检测与 Opus PLC (包丢失隐藏)
+                if (last_decoded_sequence != 0 && queue->sequence > last_decoded_sequence + 1)
+                {
+                    uint32_t gap = queue->sequence - last_decoded_sequence - 1;
+                    rt_kprintf("AUDIO: Seq jump detected %lu -> %lu (gap %lu)\n", last_decoded_sequence, queue->sequence, gap);
+                    if (gap <= 3) {
+                        // 对于 1~3 帧轻微丢包，使用 Opus 原生 PLC 平滑修补过渡，维持语音连贯
+                        for (uint32_t i = 0; i < gap; i++) {
+                            opus_decode(thiz->decoder, NULL, 0, (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN / 2, 0);
+                            audio_write_and_wait(thiz, (uint8_t *)thiz->downlink_decode_out, XZ_SPK_FRAME_LEN);
+                        }
+                    } else if (gap > 50) {
+                        // 仅在大面积断网跳跃时重置状态
+                        opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
                     }
-                } else {
-                    // 大面积丢包（网络大卡顿），直接重置状态
-                    opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
                 }
-            }
-            last_decoded_sequence = queue->sequence;
-            g_audio_diag.decode_total++;
-            opus_int32 res = opus_decode(
-                thiz->decoder, (const uint8_t *)queue->data, queue->data_len,
-                (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN / 2,
-                0);
+                last_decoded_sequence = queue->sequence;
+                g_audio_diag.decode_total++;
+                opus_int32 res = opus_decode(
+                    thiz->decoder, (const uint8_t *)queue->data, queue->data_len,
+                    (opus_int16 *)&thiz->downlink_decode_out[0], XZ_SPK_FRAME_LEN / 2,
+                    0);
 
-            if (res != XZ_SPK_FRAME_LEN / 2)
-            {
-                LOG_I("decode out samples=%d\n", res);
-                // 解码异常时重置解码器状态防止错误累积
-                if (res < 0)
+                if (res != XZ_SPK_FRAME_LEN / 2)
                 {
-                    g_audio_diag.decode_errors++;
-                    opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
+                    LOG_I("decode out samples=%d\n", res);
+                    if (res < 0)
+                    {
+                        g_audio_diag.decode_errors++;
+                        opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
+                    }
+                    else
+                    {
+                        g_audio_diag.decode_wrong_size++;
+                    }
                 }
-                else
+                if (res > 0)
                 {
-                    g_audio_diag.decode_wrong_size++;
+                    audio_write_and_wait(thiz, (uint8_t *)thiz->downlink_decode_out,
+                                         res * 2);
                 }
-            }
-            if (res > 0)
-            {
-                audio_write_and_wait(thiz, (uint8_t *)thiz->downlink_decode_out,
-                                     res * 2);
-            }
 
-            uint8_t need_decode_gain = 0;
-            rt_enter_critical();
-            rt_slist_remove(&thiz->downlink_decode_busy, decode);
-            rt_slist_append(&thiz->downlink_decode_idle, decode);
-            if (rt_slist_first(&thiz->downlink_decode_busy))
-            {
-                need_decode_gain = true;
-            }
-            else
-            {
-                // 队列被彻底抽干，发生了欠载（Underrun）
-                // 下次收到数据时，强制重新进入 Jitter Buffer 缓冲状态
-                is_buffering = true;
-                // 趁着欠载停顿，顺手重置 Opus 解码器状态，消除长时间播放带来的定点/浮点累积误差 (Drift)
-                opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
-            }
-            rt_exit_critical();
+                uint8_t need_decode_gain = 0;
+                rt_enter_critical();
+                rt_slist_remove(&thiz->downlink_decode_busy, decode);
+                rt_slist_append(&thiz->downlink_decode_idle, decode);
+                if (rt_slist_first(&thiz->downlink_decode_busy))
+                {
+                    need_decode_gain = true;
+                }
+                rt_exit_critical();
 
-            if (need_decode_gain)
-                rt_event_send(thiz->event, XZ_EVENT_DOWNLINK);
+                if (need_decode_gain)
+                    rt_event_send(thiz->event, XZ_EVENT_DOWNLINK);
+            }
         }
 
         // ===== 每 30 秒输出一次音频诊断报告 =====
@@ -956,34 +923,40 @@ void xz_mic_close(xz_audio_t *thiz)
 
 void xz_speaker_open(xz_audio_t *thiz)
 {
-    // 每次 speaker 开启时重置所有 DSP 滤波器状态，防止长时间 Q14 定点数漂移
+    // 每次 speaker 开启时重置所有 DSP 滤波器状态，防止跨对话残留
     for (int i = 0; i < 4; i++)
     {
         g_xz_eq[i].x1 = 0; g_xz_eq[i].x2 = 0;
         g_xz_eq[i].y1 = 0; g_xz_eq[i].y2 = 0;
     }
-    // 重置 Opus 解码器状态，避免残留状态导致新流爆音
+    g_mic_hpf_x = 0;
+    g_mic_hpf_y = 0;
+
+    // 清空下行队列中的历史残留帧，确保新对话完全从第1帧开始
+    rt_enter_critical();
+    rt_slist_t *node;
+    while ((node = rt_slist_first(&thiz->downlink_decode_busy)) != RT_NULL)
+    {
+        rt_slist_remove(&thiz->downlink_decode_busy, node);
+        rt_slist_append(&thiz->downlink_decode_idle, node);
+    }
+    rt_exit_critical();
+
+    // 重置 Opus 解码器状态，准备新对话干净的 LPC 预测流
     if (thiz->decoder)
     {
         opus_decoder_ctl(thiz->decoder, OPUS_RESET_STATE);
     }
 
 #if PKG_XIAOZHI_USING_AEC
-    #if STOP_SPEAKER_WHEN_DETECTED_MIC_VOICE
     LOG_I("speaker on");
     xiaozhi_ui_chat_status("\u8bb2\u8bdd\u4e2d...");
     g_xz_context.remote_sequence = 0;
-    thiz->is_tx_enable = 0;
     thiz->is_tx_enable = 1;
-    #endif
 #else
     if (!thiz->speaker)
     {
         LOG_I("speaker on,thiz->inited=%d", thiz->inited);
-        // if (thiz->inited != 2)
-        // {
-        //     return;
-        // }
         xiaozhi_ui_chat_status("\u8bb2\u8bdd\u4e2d...");
         audio_parameter_t pa = {0};
         pa.write_bits_per_sample = 16;
@@ -1004,29 +977,18 @@ void xz_speaker_open(xz_audio_t *thiz)
 void xz_speaker_close(xz_audio_t *thiz)
 {
 #if PKG_XIAOZHI_USING_AEC
-    #if STOP_SPEAKER_WHEN_DETECTED_MIC_VOICE
     LOG_I("speaker off");
     xiaozhi_ui_chat_status("\u5f85\u547d\u4e2d...");
-    rt_slist_t *idle;
     thiz->is_tx_enable = 0;
     rt_enter_critical();
-    while (1)
+    rt_slist_t *idle;
+    while ((idle = rt_slist_first(&thiz->downlink_decode_busy)) != RT_NULL)
     {
-        idle = rt_slist_first(&thiz->downlink_decode_busy);
-        if (idle)
-        {
-            rt_slist_remove(&thiz->downlink_decode_busy, idle);
-            rt_slist_append(&thiz->downlink_decode_idle, idle);
-        }
-        else
-        {
-            break;
-        }
+        rt_slist_remove(&thiz->downlink_decode_busy, idle);
+        rt_slist_append(&thiz->downlink_decode_idle, idle);
     }
     rt_exit_critical();
-    #endif
 #else
-
     if (thiz->speaker)
     {
         for (int i = 0; i < 1000; i++)
@@ -1043,20 +1005,12 @@ void xz_speaker_close(xz_audio_t *thiz)
         audio_close(thiz->speaker);
         thiz->speaker = NULL;
         thiz->is_tx_enable = 0;
-        rt_slist_t *idle;
         rt_enter_critical();
-        while (1)
+        rt_slist_t *idle;
+        while ((idle = rt_slist_first(&thiz->downlink_decode_busy)) != RT_NULL)
         {
-            idle = rt_slist_first(&thiz->downlink_decode_busy);
-            if (idle)
-            {
-                rt_slist_remove(&thiz->downlink_decode_busy, idle);
-                rt_slist_append(&thiz->downlink_decode_idle, idle);
-            }
-            else
-            {
-                break;
-            }
+            rt_slist_remove(&thiz->downlink_decode_busy, idle);
+            rt_slist_append(&thiz->downlink_decode_idle, idle);
         }
         rt_exit_critical();
     }
